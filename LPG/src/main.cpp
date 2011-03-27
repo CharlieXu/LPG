@@ -17,6 +17,7 @@
 #include <iostream>
 #include <string>
 #include <fstream>
+using namespace std;
 //-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
@@ -55,39 +56,66 @@ void FreeIfNeeded();
 void RunTestSuite(bool useGPU = false);
 //-----------------------------------------------------------------------------
 
+//-----------------------------------------------------------------------------
+// Configuration
+char dataFolderPath[255];
+char testcasesFilename[255];
+
+//-----------------------------------------------------------------------------
 int main(int argc, char *argv[]) {
 
-	// Display standard welcome
-	printf("LPG - Command Line Interface V1.0\n");
+	printf("LPG - Command Line Interface\n");
+	
+	FILE* readConfigFile = NULL;
+	readConfigFile = fopen("config.txt", "r");
+	if (readConfigFile != NULL) {
+		printf("Reading configuration file...\n");
+		// LINE 1 - dataFolderPath
+		fgets(dataFolderPath, 255, readConfigFile);
+		dataFolderPath[strlen(dataFolderPath) - 1] = '\0';
+		printf("Will look for .LP/.MPS files in path: %s\n", dataFolderPath);
+		// LINE 2 - testcasesFilename
+		fgets(testcasesFilename, 255, readConfigFile);
+		testcasesFilename[strlen(testcasesFilename) - 1] = '\0';
+		printf("List of problems to solve is in file: %s\n", testcasesFilename);
+	} else {
+		// File not found, create it with defaults
+		printf("Configuration file config.txt was not found!\n");
+		printf("Default configuration will be used, and written to config.txt\n");
+		FILE* writeConfigFile = NULL;
+		writeConfigFile = fopen("config.txt", "w");
+		// LINE 1 - dataFolderPath
+		fprintf(writeConfigFile, "data/\n");
+		sprintf(dataFolderPath, "data/");
+		printf("Will look for .LP/.MPS files in path: %s\n", dataFolderPath);
+		// LINE 2 - testcasesFilename
+		fprintf(writeConfigFile, "testcases.txt\n");
+		sprintf(testcasesFilename, "testcases.txt");
+		printf("List of problems to solve is in file: %s\n", testcasesFilename);
+		// EOF
+		fprintf(writeConfigFile,"#");
+		fclose(writeConfigFile);
+	}
+
 
 	// Are there any arguments?
 	if (argc > 1) {
 
-		// COMMAND LINE MODE
 		printf("Command line mode\n");
+
 		char command = argv[1][0];
-		if (command == 'M') {
-			LoadFromMPS(argv[2]);
-		} else if (command == 'L') {
-			LoadFromLP(argv[2]);
-		} else {
-			return -1;
-		}
+		if		(command == 'M') { LoadFromMPS(argv[2]); } 
+		else if (command == 'L') { LoadFromLP(argv[2]);  }
+		else					 { return -1;			 }
 
 		char solver = argv[3][0];
-		if (solver == 'C') {
-			SolveCPU();
-		} else if (solver == 'G') {
-			SolveGPU();
-		} else {
-			return -1;
-		}
+		if		(solver == 'C') { SolveCPU(); }
+		else if (solver == 'G') { SolveGPU(); }
+		else					{ return -1;  }
 
 	} else {
 
-		// INTERACTIVE MODE
 		printf("Interactive mode\n");
-		// Display menu
 		DisplayMenu();
 		// Wait for commands
 		bool done = false;
