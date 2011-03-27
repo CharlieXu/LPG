@@ -4,7 +4,7 @@
 // ------------------------------------------------------------------------- //
 //																			 //
 // main.cpp																	 //
-// Everything!			                              						 //
+// Main interface		                              						 //
 //																			 //
 // (c) Iain Dunning 2011													 //
 ///////////////////////////////////////////////////////////////////////////////
@@ -17,32 +17,35 @@
 #include <iostream>
 #include <string>
 #include <fstream>
-//-----------------------------------------------------------------------------
-
-//-----------------------------------------------------------------------------
-// CoinUtils
-#include "CoinMpsIO.hpp"
-#include "CoinLpIO.hpp"
+#include <vector>
 //-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
 // libLPG
 #include "libLPG.hpp"
-LPG* model;
+LPG* model = NULL;
 //-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
 // Prototypes
+void ProcessConfig();
 void DisplayMenu();
 void Load(char fileType, const char* providedFilename = "");
 void Solve(char type);
 void RunTestSuite(bool useGPU = false);
 //-----------------------------------------------------------------------------
 
+//-----------------------------------------------------------------------------
+// Configuration
+char dataFolderPath[255];
+char testcasesFilename[255];
+//-----------------------------------------------------------------------------
+
 int main(int argc, char *argv[]) {
 
-	// Display standard welcome
 	printf("LPG - Command Line Interface V1.0\n");
+
+	ProcessConfig();
 
 	// Are there any arguments?
 	if (argc > 1) {
@@ -50,13 +53,13 @@ int main(int argc, char *argv[]) {
 		// COMMAND LINE MODE
 		printf("Command line mode\n");
 		char command = argv[1][0];
-		if		(command == 'M') { LoadFromMPS(argv[2]);	} 
-		else if (command == 'L') { LoadFromLP(argv[2]);	}
+		if		(command == 'M') { Load(command,argv[2]);	} 
+		else if (command == 'L') { Load(command,argv[2]);	}
 		else					 { return -1;				}
 
 		char solver = argv[3][0];
-		if		(solver == 'C')	{ SolveCPU();	}
-		else if (solver == 'G')	{ SolveGPU();	}
+		if		(solver == 'C')	{ Solve(solver);	}
+		else if (solver == 'G')	{ Solve(solver);	}
 		else					{ return -1;	}
 
 	} else {
@@ -73,8 +76,8 @@ int main(int argc, char *argv[]) {
 			switch (command) {
 				case 'L': Load(command);		break;
 				case 'M': Load(command);		break;
-				case 'C': Solve(command);		break;
-				case 'G': Solve(command);		break;
+				case 'C': Solve(command);		break; // CPU
+				case 'G': Solve(command);		break; // GPU
 				case 'T': RunTestSuite(false);	break; // CPU
 				case 'Y': RunTestSuite(true);	break; // GPU
 				case 'X': done = true;			break;
@@ -100,8 +103,10 @@ void DisplayMenu()
 }
 
 //-----------------------------------------------------------------------------
-void LoadFromMPS(char command, const char* providedFilename)
+void Load(char command, const char* providedFilename)
 {
+	if (model != NULL) delete model;
+
 	char filename[255];
 	// Filename is optional - will scanf if not there
 	if (strlen(providedFilename) > 0) {
@@ -110,39 +115,20 @@ void LoadFromMPS(char command, const char* providedFilename)
 		scanf("%s",filename);
 	}
 
-	char filename[255] = "";
-	strcat(filename, "C:/Users/Iain/LPG/TestProbs/");
-	strcat(filename, filename);
+	char filepathAndName[255] = "";
+	strcat(filepathAndName, dataFolderPath);
+	strcat(filepathAndName, filename);
 
-	if (!silentMode) printf("LoadFromMPS(filename=%s)\n", filename);
-	if (!silentMode) printf("CoinMpsIO...\n");
-
-	CoinMpsIO mpsIO;
-	int status = mpsIO.readMps(filepathname);
-	if (status == -1) return;
-
-	if (!silentMode) printf("Convert to internal form...\n");
-	ConvertFromGeneralFormToInternal(	*mpsIO.getMatrixByCol(),	mpsIO.getColLower(), mpsIO.getColUpper(),
-										mpsIO.getObjCoefficients(),	mpsIO.getRowLower(), mpsIO.getRowUpper(),
-										m, n, sparseA, A, b, c, xLB, xUB,
-										silentMode);
-	x = (double*)malloc(sizeof(double)*n);
-	isLoaded = true;
-	z = 0.0;
-	status = LPG_UNKNOWN;
-	if (!silentMode) printf("Finished loading!\n");
+	model = new LPG();
+	if (command == 'L') model->LoadLP (filepathAndName);
+	if (command == 'M') model->LoadMPS(filepathAndName);
 }
 
 //-----------------------------------------------------------------------------
 void RunTestSuite(bool useGPU) {
-
-	// Prepare for GPUing...
-	if (useGPU) {
-		printf("RunTestSuite is intialising GPU and kernels...\n");
-		InitGPU();
-		InitKernels();
-		printf("Done!\n");
-	}
+	
+	// Create a LPG instance
+	model = new LPG(useGPU, false);
 
 	// Load test data
 	std::vector<std::string> fileNames;
@@ -152,7 +138,7 @@ void RunTestSuite(bool useGPU) {
 	std::vector<int> problemSizeM;
 
 	int numCases = 0;
-	std::ifstream testData("testcases.txt");
+	std::ifstream testData(testcasesFilename);
 
 	testData >> numCases;
 	for (int i = 0; i < numCases; i++) {
@@ -166,14 +152,16 @@ void RunTestSuite(bool useGPU) {
 
 	// Run tests
 	for (int i = 0; i < numCases; i++) {
-		LoadFromMPS(fileNames[i].c_str(), true);
-		problemSizeM.push_back(m);
+		std::string fullFileName(fileNames[i]);
+		fullFileName.insert(0,dataFolderPath);
+		model->LoadMPS(fullFileName.c_str());
+		problemSizeM.push_back(model->m);
 		clock_t timePreSolve = clock();
-		if (!useGPU) SolveLP_C(m,n,A,b,c,xLB,xUB,z,x,status);
-		if ( useGPU) SolveLP_G(m,n,A,b,c,xLB,xUB,z,x,status);
+		if (!useGPU) model->SolveCPU();
+		if ( useGPU) model->SolveGPU();
 		clock_t timePostSolve = clock();
 		times.push_back((timePostSolve-timePreSolve)/(CLOCKS_PER_SEC*1.0));
-		results.push_back(z);
+		results.push_back(model->z);
 	}
 	
 	// Results table
@@ -183,54 +171,64 @@ void RunTestSuite(bool useGPU) {
 		printf("%15s  %10.3f  %10.3f  %7.3f  %6d\n", fileNames[i].c_str(), results[i], expected[i], times[i], problemSizeM[i]);
 	}
 
-	// Finish up GPU
-	if (useGPU) {
-		printf("RunTestSuite is shutting down GPU...\n");
-		FreeGPUandKernels();
-		printf("Done!\n");
+	// Delete LPG instance
+	delete model;
+}
+
+
+//-----------------------------------------------------------------------------
+void Solve(char type) 
+{
+	// GPU-only: prepare GPU (may be done already)
+	if (type == 'G') model->InitGPU();
+	if (type == 'G') model->InitKernels();
+
+	// Solve it
+	clock_t timePreSolve = clock();
+	if (type == 'C') model->SolveCPU();
+	if (type == 'G') model->SolveGPU();
+	clock_t timePostSolve = clock();
+	printf("Solve took %f s\n", (timePostSolve-timePreSolve)/(CLOCKS_PER_SEC*1.0));
+
+	// Display results
+	printf("Objective function value: z = %f\n", model->z);
+	//printf("Non-zero variables:\n");
+	//for (int i = 0; i < n; i++) if (fabs(x[i]) > LPG_TOL) printf("x[%d] = %f\n", i, x[i]);
+}
+//-----------------------------------------------------------------------------
+
+
+void ProcessConfig() {
+	FILE* readConfigFile = NULL;
+	readConfigFile = fopen("config.txt", "r");
+
+	if (readConfigFile != NULL) {
+		printf("Reading configuration file...\n");
+		// LINE 1 - dataFolderPath
+		fgets(dataFolderPath, 255, readConfigFile);
+		dataFolderPath[strlen(dataFolderPath) - 1] = '\0';
+		printf("Will look for .LP/.MPS files in path: %s\n", dataFolderPath);
+		// LINE 2 - testcasesFilename
+		fgets(testcasesFilename, 255, readConfigFile);
+		testcasesFilename[strlen(testcasesFilename) - 1] = '\0';
+		printf("List of problems to solve is in file: %s\n", testcasesFilename);
+
+	} else {
+		// File not found, create it with defaults
+		printf("Configuration file config.txt was not found!\n");
+		printf("Default configuration will be used, and written to config.txt\n");
+		FILE* writeConfigFile = NULL;
+		writeConfigFile = fopen("config.txt", "w");
+		// LINE 1 - dataFolderPath
+		fprintf(writeConfigFile, "data/\n");
+		sprintf(dataFolderPath, "data/");
+		printf("Will look for .LP/.MPS files in path: %s\n", dataFolderPath);
+		// LINE 2 - testcasesFilename
+		fprintf(writeConfigFile, "testcases.txt\n");
+		sprintf(testcasesFilename, "testcases.txt");
+		printf("List of problems to solve is in file: %s\n", testcasesFilename);
+		// EOF
+		fprintf(writeConfigFile,"#");
+		fclose(writeConfigFile);
 	}
 }
-
-
-//-----------------------------------------------------------------------------
-void SolveCPU() 
-{
-	// Solve it
-	clock_t timePreSolve = clock();
-	SolveLP_C(m,n,A,b,c,xLB,xUB,z,x,status);
-	clock_t timePostSolve = clock();
-	printf("Time for SolveLP_C was %f seconds\n", (timePostSolve-timePreSolve)/(CLOCKS_PER_SEC*1.0));
-
-	// Display results
-	printf("Objective function value: z = %f\n", z);
-	//printf("Non-zero variables:\n");
-	//for (int i = 0; i < n; i++) if (fabs(x[i]) > LPG_TOL) printf("x[%d] = %f\n", i, x[i]);
-}
-//-----------------------------------------------------------------------------
-void SolveGPU()
-{
-	// Get ready
-	clock_t timePreInit = clock();
-	InitGPU();
-	InitKernels();
-	clock_t timePostInit = clock();
-	printf("Time for InitGPU and InitKernels was %f seconds\n", (timePostInit-timePreInit)/(CLOCKS_PER_SEC*1.0));
-
-	// Solve it
-	clock_t timePreSolve = clock();
-	SolveLP_G(m,n,A,b,c,xLB,xUB,z,x,status);
-	clock_t timePostSolve = clock();
-	printf("Time for SolveLP_G was %f seconds\n", (timePostSolve-timePreSolve)/(CLOCKS_PER_SEC*1.0));
-
-	// Display results
-	printf("Objective function value: z = %f\n", z);
-	//printf("Non-zero variables:\n");
-	//for (int i = 0; i < n; i++) if (fabs(x[i]) > LPG_TOL) printf("x[%d] = %f\n", i, x[i]);
-
-	// Shut it down
-	clock_t timePreFree = clock();
-	FreeGPUandKernels();
-	clock_t timePostFree = clock();
-	printf("Time for FreeGPUandKernels was %f seconds\n", (timePostFree-timePreFree)/(CLOCKS_PER_SEC*1.0));
-}
-//-----------------------------------------------------------------------------

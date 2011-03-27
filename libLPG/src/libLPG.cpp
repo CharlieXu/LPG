@@ -32,7 +32,7 @@ bool LPG::GPUloaded = false;
 //-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
-void LPG::FreeIfNeeded() {
+void LPG::FreeModelIfNeeded() {
 	if (isLoaded) {
 		free(A);	free(b);	free(c);
 		free(xLB);	free(xUB);	free(x);
@@ -45,7 +45,7 @@ void LPG::FreeIfNeeded() {
 // Model Manipulation
 void LPG::LoadMPS(const char* filename)
 {
-	FreeIfNeeded();
+	FreeModelIfNeeded();
 
 	CoinMpsIO mpsIO;
 	if (mpsIO.readMps(filename) == -1) {
@@ -59,9 +59,9 @@ void LPG::LoadMPS(const char* filename)
 					mpsIO.getRowLower(), mpsIO.getRowUpper()
 				);
 }
-void LPG::LoadMPS(const char* filename)
+void LPG::LoadLP(const char* filename)
 {
-	FreeIfNeeded();
+	FreeModelIfNeeded();
 
 	CoinLpIO lpIO;
 	try {
@@ -75,7 +75,7 @@ void LPG::LoadMPS(const char* filename)
 	InternalForm(	*lpIO.getMatrixByCol(),		
 					lpIO.getColLower(), lpIO.getColUpper(),
 					lpIO.getObjCoefficients(),
-					lpIO.getRowLower(), lpIO.getRowUpper(),
+					lpIO.getRowLower(), lpIO.getRowUpper()
 				);
 }
 
@@ -95,7 +95,7 @@ void LPG::InternalForm(
 	const CoinPackedMatrix& matrix,	
 	const double* collb, const double* colub, 
 	const double* obj, 
-	const double* rowlb, const double* rowub,
+	const double* rowlb, const double* rowub
 	) {
 	
 	//-------------------------------------------------------------------------
@@ -177,7 +177,7 @@ void LPG::InternalForm(
 	c   = (double*)malloc(sizeof(double) *     n); 
 	xUB = (double*)malloc(sizeof(double) *     n);
 	xLB = (double*)malloc(sizeof(double) *     n);
-	x   = (double*)malloc(sizeof(double) *     n);
+	x   = (double*)malloc(sizeof(double) *(m + n));
 	
 	//-------------------------------------------------------------------------
 	// 5. COPY DATA INTO NEW MEMORY

@@ -1,14 +1,20 @@
 ///////////////////////////////////////////////////////////////////////////////
 // LPG - libLPG																 //
-// Version 1.0																 //
 // Implements RSM for the solution of LPs									 //
 // ------------------------------------------------------------------------- //
 //																			 //
-// SolveLP_G.cpp														     //
+// SolveGPU.cpp															     //
 // Solve LPs on the GPGPU                              						 //
 //																			 //
 // (c) Iain Dunning 2011													 //
 ///////////////////////////////////////////////////////////////////////////////
+
+
+//*****************************************************************************
+// Broken until further notice!
+// Due to:
+//	- Column-wise A
+//*****************************************************************************
 
 //-----------------------------------------------------------------------------
 // Interesting things to search for
@@ -30,33 +36,6 @@
 //-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
-// OpenCL
-// Additional include directories:
-//C:\Program Files (x86)\NVIDIA GPU Computing Toolkit\CUDA\v3.2\lib\Win32
-//C:\Program Files (x86)\ATI Stream\lib\x86
-// Additional library directories:
-//C:\Program Files (x86)\NVIDIA GPU Computing Toolkit\CUDA\v3.2\include;
-//C:\Program Files (x86)\ATI Stream\include
-#pragma comment(lib, "OpenCL.lib")
-#include <CL/cl.h>
-#define MAX_SOURCE_SIZE (0x100000)
-
-// OpenCL globals
-bool isOpenCLinit = false;
-cl_platform_id	platformID	= NULL;
-cl_device_id	deviceID	= NULL;   
-cl_uint numDevices, numPlatforms;
-cl_context context;
-cl_command_queue commandQueue;
-
-// OpenCL kernels
-cl_program dual_program;		cl_kernel dual_kernel;
-cl_program rc1_program;			cl_kernel rc1_kernel;
-cl_program rc2_program;			cl_kernel rc2_kernel;
-cl_program binvas_program;		cl_kernel binvas_kernel;
-cl_program tableau1_program;	cl_kernel tableau1_kernel;
-cl_program tableau2_program;	cl_kernel tableau2_kernel;
-
 // OpenCL error checker - useful for debugging
 // USE: Just write CL_ERR_CHECK (no semicolon) after a OpenCL call
 //		You can find the various error codes in CL/cl.h
@@ -69,7 +48,7 @@ cl_program tableau2_program;	cl_kernel tableau2_kernel;
 // Inputs: fileName, kernelName
 // Outputs: program, kernel
 // NOTE: Makes use of globals - thus only call after InitGPU
-void LoadKernel(char* fileName, char* kernelName, cl_program& program, cl_kernel& kernel)
+void LPG::LoadKernel(char* fileName, char* kernelName, cl_program& program, cl_kernel& kernel)
 {
 	// Prevent this running before InitGPU
 	if (!isOpenCLinit) {
@@ -122,8 +101,10 @@ void LoadKernel(char* fileName, char* kernelName, cl_program& program, cl_kernel
 //-----------------------------------------------------------------------------
 // InitGPU
 // Sets up the device, context and commandQueue
-void InitGPU()
+void LPG::InitGPU()
 {
+	if (isOpenCLinit) return;
+
 	// Get platform and device information
 	cl_int ret;
 	ret = clGetPlatformIDs(1, &platformID, &numPlatforms); 
@@ -147,25 +128,21 @@ void InitGPU()
 //-----------------------------------------------------------------------------
 // InitKernels
 // Loads all the kernels that will be needed
-void InitKernels()
+void LPG::InitKernels()
 {	
-	LoadKernel("C:/Users/Iain/Desktop/LPG/libLPG/kernel/dual_kernel.cl",		"dual",		dual_program,		dual_kernel		);
-	LoadKernel("C:/Users/Iain/Desktop/LPG/libLPG/kernel/rc1_kernel.cl",			"rc1",		rc1_program,		rc1_kernel		);
-	LoadKernel("C:/Users/Iain/Desktop/LPG/libLPG/kernel/rc2_kernel.cl",			"rc2",		rc1_program,		rc2_kernel		);
-	LoadKernel("C:/Users/Iain/Desktop/LPG/libLPG/kernel/binvas_kernel.cl",		"binvas",	binvas_program,		binvas_kernel	);
-	LoadKernel("C:/Users/Iain/Desktop/LPG/libLPG/kernel/tableau1_kernel.cl",	"tableau1",	tableau1_program,	tableau1_kernel	);
-	LoadKernel("C:/Users/Iain/Desktop/LPG/libLPG/kernel/tableau2_kernel.cl",	"tableau2",	tableau2_program,	tableau2_kernel	);
+	LoadKernel("../kernel/dual_kernel.cl",		"dual",		dual_program,		dual_kernel		);
+	LoadKernel("../kernel/rc1_kernel.cl",		"rc1",		rc1_program,		rc1_kernel		);
+	LoadKernel("../kernel/rc2_kernel.cl",		"rc2",		rc1_program,		rc2_kernel		);
+	LoadKernel("../kernel/binvas_kernel.cl",	"binvas",	binvas_program,		binvas_kernel	);
+	LoadKernel("../kernel/tableau1_kernel.cl",	"tableau1",	tableau1_program,	tableau1_kernel	);
+	LoadKernel("../kernel/tableau2_kernel.cl",	"tableau2",	tableau2_program,	tableau2_kernel	);
 }
 //-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
 // SolveLP_G
 // Given a problem in SCF, solve using RSM BOUNDED
-void SolveLP_G (
- int m, int n,							// Problem size
- double *A, double *b, double *c_orig,	// } Problem
- double *xLB, double *xUB,				// }
- double &z, double *x_ans, int &status)	// Output
+void LPG::SolveGPU()
 {
 	//-------------------------------------------------------------------------
 	// 1.	GENERAL SETUP
@@ -221,7 +198,7 @@ void SolveLP_G (
 	// 3.1.1	Real variables
 	for (int i = 0; i < n; i++) {
 		double absLB = fabs(xLB[i]), absUB = fabs(xUB[i]);
-		x[i]		 = (absLB < absUB) ? absLB		: absUB;
+		x[i]		 = (absLB < absUB) ? xLB[i]		: xUB[i];
 		varStatus[i] = (absLB < absUB) ? NONBASIC_L : NONBASIC_U;
 	}
 	// 3.1.2	Artificial variables
@@ -291,7 +268,7 @@ void SolveLP_G (
 	
 	// 3.4	Memory on GPU
 	ret = clEnqueueWriteBuffer(commandQueue, A_gpu,		CL_TRUE, 0,			nm_floats,	A,			0, NULL, NULL); CL_ERR_CHECK
-	ret = clEnqueueWriteBuffer(commandQueue, c_gpu,		CL_TRUE, 0,			 n_floats,	c_orig,		0, NULL, NULL); CL_ERR_CHECK
+	ret = clEnqueueWriteBuffer(commandQueue, c_gpu,		CL_TRUE, 0,			 n_floats,	c,			0, NULL, NULL); CL_ERR_CHECK
 	ret = clEnqueueWriteBuffer(commandQueue, Binv_gpu,	CL_TRUE, 0,		    mm_floats,	Binv,		0, NULL, NULL); CL_ERR_CHECK
 	ret = clEnqueueWriteBuffer(commandQueue, cBT_gpu,	CL_TRUE, 0,			 m_floats,	cBT,		0, NULL, NULL); CL_ERR_CHECK
 
@@ -312,7 +289,7 @@ void SolveLP_G (
 				printf("\t[phase one] z = %.5f\n", z_one);
 			} else {
 				double z_two = 0.0;
-				for (int i = 0; i < n; i++) z_two += x[i]*c_orig[i];
+				for (int i = 0; i < n; i++) z_two += x[i]*c[i];
 				printf("\t[phase two] z = %.5f\n", z_two);
 			}
 		}
@@ -366,7 +343,7 @@ void SolveLP_G (
 					printf("\tTransitioning to phase 2\n");
 					phaseOne = false;
 					for (int i = 0; i < m; i++) {
-						cBT[i] = (basicVars[i] < n) ? (c_orig[basicVars[i]]) : (0.0);
+						cBT[i] = (basicVars[i] < n) ? (c[basicVars[i]]) : (0.0);
 					}
 					ret = clEnqueueWriteBuffer(commandQueue, cBT_gpu, CL_TRUE, 0, m_floats, cBT, 0, NULL, NULL); CL_ERR_CHECK
 					continue;
@@ -376,8 +353,8 @@ void SolveLP_G (
 				status = LPG_OPTIMAL;
 				z = 0.0;
 				for (int i = 0; i < n; i++) {
-					x_ans[i] = x[i];
-					z += c_orig[i] * x[i];
+					//x_ans[i] = x[i];
+					z += c[i] * x[i];
 				}
 				break;
 			}
@@ -525,7 +502,7 @@ void SolveLP_G (
 				if (fabs(x[basicVars[r]] - 0.00000) < LPG_TOL) varStatus[basicVars[r]] = NONBASIC_L;
 				if (fabs(x[basicVars[r]] - LPG_BIG) < LPG_TOL) varStatus[basicVars[r]] = NONBASIC_U;
 			}
-			cBT[r] = phaseOne ? 0.0 : c_orig[s];
+			cBT[r] = phaseOne ? 0.0 : c[s];
 			basicVars[r] = s;
 
 			// Push cBT
@@ -557,7 +534,7 @@ void SolveLP_G (
 //-----------------------------------------------------------------------------
 // FreeGPUandKernels
 // Unload all the kernels and close down OpenCL
-void FreeGPUandKernels()
+void LPG::FreeGPUandKernels()
 {
 	cl_int ret;
 	// Kernels
@@ -572,4 +549,5 @@ void FreeGPUandKernels()
     ret = clReleaseCommandQueue(commandQueue);
     ret = clReleaseContext(context);
 
+	isOpenCLinit = false;
 }

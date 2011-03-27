@@ -150,15 +150,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\src\ModelTools.cpp"
+				RelativePath="..\src\SolveCPU.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\SolveLP_C.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\src\SolveLP_G.cpp"
+				RelativePath="..\src\SolveGPU.cpp"
 				>
 			</File>
 		</Filter>

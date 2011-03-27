@@ -1,10 +1,9 @@
 ///////////////////////////////////////////////////////////////////////////////
 // LPG - libLPG																 //
-// Version 1.0																 //
 // Implements RSM for the solution of LPs									 //
 // ------------------------------------------------------------------------- //
 //																			 //
-// SolveLP_C.cpp														     //
+// SolveCPU.cpp															     //
 // Solve LPs on the CPU                              						 //
 //																			 //
 // (c) Iain Dunning 2011													 //
@@ -32,11 +31,7 @@
 //-----------------------------------------------------------------------------
 // SolveLP_C
 // Given a problem in SCF, solve using RSM BOUNDED
-void SolveLP_C (
- int m, int n,							// Problem size
- double *A, double *b, double *c_orig,	// } Problem
- double *xLB, double *xUB,				// }
- double &z, double *x_ans, int &status)	// Output
+void LPG::SolveCPU()
 {
 	
 	//-------------------------------------------------------------------------
@@ -60,7 +55,7 @@ void SolveLP_C (
 	double*	Binv		= (double*)	malloc(mm_floats			);
 	double* cBT			= (double*) malloc(m_floats				);
 	// 2.2	General
-	double*	x			= (double*)	malloc(sizeof(double)*(n+m)	);
+	//double*	x			= (double*)	malloc(sizeof(double)*(n+m)	);
 	double* pi			= (double*) malloc(m_floats				);
 	double* rc			= (double*) malloc(n_floats				);
 	double* BinvAs		= (double*) malloc(m_floats				);
@@ -71,7 +66,7 @@ void SolveLP_C (
 	// 3.1.1	Real variables
 	for (int i = 0; i < n; i++) {
 		double absLB = fabs(xLB[i]), absUB = fabs(xUB[i]);
-		x[i]		 = (absLB < absUB) ? absLB		: absUB;
+		x[i]		 = (absLB < absUB) ? xLB[i]		: xUB[i];
 		varStatus[i] = (absLB < absUB) ? NONBASIC_L : NONBASIC_U;
 	}
 	// 3.1.2	Artificial variables
@@ -89,8 +84,8 @@ void SolveLP_C (
 			Binv[i+j*m] = (i==j) ? 1.0 : 0.0;
 		}
 	}
-	for (int i = n; i < n+m; i++) {
-		cBT[i-n] = +1.0;
+	for (int i = 0; i < m; i++) {
+		cBT[i] = +1.0;
 	}
 	
 	//-------------------------------------------------------------------------
@@ -110,7 +105,7 @@ void SolveLP_C (
 				printf("\t[phase one] z = %.5f\n", z_one);
 			} else {
 				double z_two = 0.0;
-				for (int i = 0; i < n; i++) z_two += x[i]*c_orig[i];
+				for (int i = 0; i < n; i++) z_two += x[i]*c[i];
 				printf("\t[phase two] z = %.5f\n", z_two);
 			}
 		}
@@ -139,7 +134,7 @@ void SolveLP_C (
 		// P1: rc = 0 - A^T pi
 		// P2: rc = c - A^T pi
 		for (int i = 0; i < n; i++) {
-			rc[i] = phaseOne ? 0.0 : c_orig[i];
+			rc[i] = phaseOne ? 0.0 : c[i];
 			for (int j = 0; j < m; j++) rc[i] -= A[i + j*n] * pi[j];
 		}
 		//###DEBUG: DebugPrint("rc[]",rc,n);
@@ -173,7 +168,7 @@ void SolveLP_C (
 					printf("\tTransitioning to phase 2\n");
 					phaseOne = false;
 					for (int i = 0; i < m; i++) {
-						cBT[i] = (basicVars[i] < n) ? (c_orig[basicVars[i]]) : (0.0);
+						cBT[i] = (basicVars[i] < n) ? (c[basicVars[i]]) : (0.0);
 					}
 					continue;
 				}
@@ -182,8 +177,8 @@ void SolveLP_C (
 				status = LPG_OPTIMAL;
 				z = 0.0;
 				for (int i = 0; i < n; i++) {
-					x_ans[i] = x[i];
-					z += c_orig[i] * x[i];
+					//x_ans[i] = x[i];
+					z += c[i] * x[i];
 				}
 				break;
 			}
@@ -333,7 +328,7 @@ void SolveLP_C (
 				if (fabs(x[basicVars[r]] - 0.00000) < LPG_TOL) varStatus[basicVars[r]] = NONBASIC_L;
 				if (fabs(x[basicVars[r]] - LPG_BIG) < LPG_TOL) varStatus[basicVars[r]] = NONBASIC_U;
 			}
-			cBT[r] = phaseOne ? 0.0 : c_orig[s];
+			cBT[r] = phaseOne ? 0.0 : c[s];
 			basicVars[r] = s;
 
 		} else {
@@ -350,7 +345,7 @@ void SolveLP_C (
 	free(basicVars);
 	free(Binv);
 	free(cBT);
-	free(x);
+	//free(x);
 	free(pi);
 	free(rc);
 	free(BinvAs);

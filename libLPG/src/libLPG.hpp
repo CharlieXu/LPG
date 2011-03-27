@@ -22,6 +22,19 @@
 //-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
+// OpenCL
+// Additional include directories:
+//C:\Program Files (x86)\NVIDIA GPU Computing Toolkit\CUDA\v3.2\lib\Win32
+//C:\Program Files (x86)\ATI Stream\lib\x86
+// Additional library directories:
+//C:\Program Files (x86)\NVIDIA GPU Computing Toolkit\CUDA\v3.2\include;
+//C:\Program Files (x86)\ATI Stream\include
+#pragma comment(lib, "OpenCL.lib")
+#include <CL/cl.h>
+#define MAX_SOURCE_SIZE (0x100000)
+//-----------------------------------------------------------------------------
+
+//-----------------------------------------------------------------------------
 // Constants
 // Flags for optimisation status
 #define LPG_OPTIMAL 0
@@ -34,26 +47,29 @@
 //-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
-// GPU-specific initialisation functions
-void InitKernels();
-void InitGPU();
-void FreeGPUandKernels();
-//-----------------------------------------------------------------------------
-
-//-----------------------------------------------------------------------------
 // LPG Class
 class LPG {
 public:
 
 	// Constructor
-	LPG(bool verboseMode = false)
-		{ isLoaded = false; verbose = verboseMode; }
-	~LPG()
+	LPG  (bool prepareGPU = false, bool verboseMode = false)
+		{ 
+			isLoaded = false; 
+			verbose = verboseMode;
+			isOpenCLinit = false;
+			if (prepareGPU) { InitGPU(); InitKernels(); }
+		}
+	~LPG ()
 		{ FreeModelIfNeeded(); }
 
 	// Solvers
 	void SolveCPU();
 	void SolveGPU();
+	
+	// Optional GPU setup functions
+	void InitKernels();
+	void InitGPU();
+	void FreeGPUandKernels();
 
 	// GPU status
 	static bool GPUloaded;
@@ -65,8 +81,7 @@ public:
 	// Other
 	bool verbose;
 
-private:
-
+//private:
 	bool isLoaded;
 	void FreeModelIfNeeded();
 
@@ -77,7 +92,7 @@ private:
 	double *xLB, *xUB;
 
 	double z;
-	double *x_ans;
+	double *x;
 	int status;
 
 	// Convert to internal storage format from the CoinUtils
@@ -89,10 +104,27 @@ private:
 		const double* rowlb, const double* rowub
 		);
 
+private:
+
+	void LoadKernel(char* fileName, char* kernelName, cl_program& program, cl_kernel& kernel);
+
+	// OpenCL globals
+	bool isOpenCLinit;
+	cl_platform_id platformID;
+	cl_device_id deviceID;   
+	cl_uint numDevices, numPlatforms;
+	cl_context context;
+	cl_command_queue commandQueue;
+
+	// OpenCL kernels
+	cl_program dual_program;		cl_kernel dual_kernel;
+	cl_program rc1_program;			cl_kernel rc1_kernel;
+	cl_program rc2_program;			cl_kernel rc2_kernel;
+	cl_program binvas_program;		cl_kernel binvas_kernel;
+	cl_program tableau1_program;	cl_kernel tableau1_kernel;
+	cl_program tableau2_program;	cl_kernel tableau2_kernel;
 };
 //-----------------------------------------------------------------------------
-
-
 
 //-----------------------------------------------------------------------------
 // Misc functions
