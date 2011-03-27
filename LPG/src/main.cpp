@@ -152,7 +152,7 @@ void LoadFromMPS(const char* providedFilename, bool silentMode)
 	if (!silentMode) printf("Loading MPS file %s...\n",filename);
 
 	char filepathname[100] = "";
-	strcat(filepathname, "C:/Users/Iain/Desktop/LPG/TestProbs/");
+	strcat(filepathname, "C:/Users/Iain/LPG/TestProbs/");
 	strcat(filepathname, filename);
 
 	if (!silentMode) printf("LoadFromMPS(filename=%s)\n", filename);
@@ -188,7 +188,7 @@ void LoadFromLP(const char* providedFilename, bool silentMode)
 
 
 	char filepathname[100] = "";
-	strcat(filepathname, "C:/Users/Iain/Desktop/LPG/TestProbs/");
+	strcat(filepathname, "C:/Users/Iain/LPG/TestProbs/");
 	strcat(filepathname, filename);
 
 	if (!silentMode) printf("LoadFromLP(filename=%s)\n", filename);

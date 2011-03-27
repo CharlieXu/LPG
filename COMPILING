@@ -16,6 +16,8 @@ You will need:
    * Place this in the root project directory
 - Either the Nvidia or AMD GPU computing SDKs
    * Will install to Program Files on windows
+- [optional] test problems from NETLIB/LP
+   * in \TestProbs
 
 The code itself is platform-agnostic, and should compile
 file on any system (only been tested on Windows though!)

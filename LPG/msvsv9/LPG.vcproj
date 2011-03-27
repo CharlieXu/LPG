@@ -40,7 +40,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\..\..\libLPG\src;..\..\..\..\BuildTools\headers;..\..\..\..\CoinUtils\src"
+				AdditionalIncludeDirectories="C:\Users\Iain\LPG\libLPG\src;&quot;C:\Users\Iain\LPG\coin-CoinUtils\BuildTools\headers&quot;;&quot;C:\Users\Iain\LPG\coin-CoinUtils\CoinUtils\src&quot;"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -111,8 +111,8 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="..\..\..\..\libLPG\src;..\..\..\..\BuildTools\headers;..\..\..\..\CoinUtils\src"
-				RuntimeLibrary="2"
+				AdditionalIncludeDirectories="C:\Users\Iain\LPG\libLPG\src;&quot;C:\Users\Iain\LPG\coin-CoinUtils\BuildTools\headers&quot;;&quot;C:\Users\Iain\LPG\coin-CoinUtils\CoinUtils\src&quot;"
+				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				WarningLevel="3"
 				DebugInformationFormat="3"
@@ -160,28 +160,10 @@
 	<References>
 	</References>
 	<Files>
-		<Filter
-			Name="Source Files"
-			Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
-			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
+		<File
+			RelativePath="..\src\main.cpp"
 			>
-			<File
-				RelativePath="..\src\main.cpp"
-				>
-			</File>
-		</Filter>
-		<Filter
-			Name="Header Files"
-			Filter="h;hpp;hxx;hm;inl;inc;xsd"
-			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
-			>
-		</Filter>
-		<Filter
-			Name="Resource Files"
-			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav"
-			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
-			>
-		</Filter>
+		</File>
 	</Files>
 	<Globals>
 	</Globals>

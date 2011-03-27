@@ -1,3 +1,5 @@
 *.vcproj.*.user
 *.ncb
 *.suo
+Debug/
+Release/
