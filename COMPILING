@@ -12,6 +12,7 @@ You will need:
 - the source code
    * Wherever you want
 - coin-CoinUtils (a package including CoinUtils and BuildTools)
+   * Get it from https://projects.coin-or.org/CoinUtils
    * Place this in the root project directory
 - Either the Nvidia or AMD GPU computing SDKs
    * Will install to Program Files on windows
