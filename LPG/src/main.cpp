@@ -28,30 +28,14 @@
 //-----------------------------------------------------------------------------
 // libLPG
 #include "libLPG.hpp"
-//-----------------------------------------------------------------------------
-
-//-----------------------------------------------------------------------------
-// The problem
-int m, n;
-CoinPackedMatrix* sparseA;
-double *A, *b, *c;
-double *xLB, *xUB;
-// The solution
-double* x;
-double z;
-int status;
-// Flag
-bool isLoaded = false;
+LPG* model;
 //-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
 // Prototypes
 void DisplayMenu();
-void LoadFromMPS(const char* providedFilename = "", bool silentMode = false);
-void LoadFromLP (const char* providedFilename = "", bool silentMode = false);
-void SolveCPU();
-void SolveGPU();
-void FreeIfNeeded();
+void Load(char fileType, const char* providedFilename = "");
+void Solve(char type);
 void RunTestSuite(bool useGPU = false);
 //-----------------------------------------------------------------------------
 
@@ -66,57 +50,34 @@ int main(int argc, char *argv[]) {
 		// COMMAND LINE MODE
 		printf("Command line mode\n");
 		char command = argv[1][0];
-		if (command == 'M') {
-			LoadFromMPS(argv[2]);
-		} else if (command == 'L') {
-			LoadFromLP(argv[2]);
-		} else {
-			return -1;
-		}
+		if		(command == 'M') { LoadFromMPS(argv[2]);	} 
+		else if (command == 'L') { LoadFromLP(argv[2]);	}
+		else					 { return -1;				}
 
 		char solver = argv[3][0];
-		if (solver == 'C') {
-			SolveCPU();
-		} else if (solver == 'G') {
-			SolveGPU();
-		} else {
-			return -1;
-		}
+		if		(solver == 'C')	{ SolveCPU();	}
+		else if (solver == 'G')	{ SolveGPU();	}
+		else					{ return -1;	}
 
 	} else {
 
 		// INTERACTIVE MODE
 		printf("Interactive mode\n");
-		// Display menu
+		
 		DisplayMenu();
-		// Wait for commands
+		
 		bool done = false;
 		while (!done) {
 			char command;
 			scanf("%c", &command);
 			switch (command) {
-				// L - load LP file
-				case 'L': LoadFromLP();		break;
-
-				// M - load MPS file
-				case 'M': LoadFromMPS();	break;
-
-				// C - solve problem with CPU
-				case 'C': SolveCPU();		break;
-
-				// G - solve problem with GPU
-				case 'G': SolveGPU();		break;
-
-				// T - run test problems on CPU
-				case 'T': RunTestSuite(false);	break;
-
-				// Y - run test problems on GPU
-				case 'Y': RunTestSuite(true);	break;
-
-				// X - quit
-				case 'X': done = true;		break;
-
-				
+				case 'L': Load(command);		break;
+				case 'M': Load(command);		break;
+				case 'C': Solve(command);		break;
+				case 'G': Solve(command);		break;
+				case 'T': RunTestSuite(false);	break; // CPU
+				case 'Y': RunTestSuite(true);	break; // GPU
+				case 'X': done = true;			break;
 			}
 		}
 	}
@@ -139,21 +100,19 @@ void DisplayMenu()
 }
 
 //-----------------------------------------------------------------------------
-void LoadFromMPS(const char* providedFilename, bool silentMode)
+void LoadFromMPS(char command, const char* providedFilename)
 {
-	FreeIfNeeded();
-
-	char filename[100];
+	char filename[255];
+	// Filename is optional - will scanf if not there
 	if (strlen(providedFilename) > 0) {
 		strcpy(filename, providedFilename);
 	} else {
 		scanf("%s",filename);
 	}
-	if (!silentMode) printf("Loading MPS file %s...\n",filename);
 
-	char filepathname[100] = "";
-	strcat(filepathname, "C:/Users/Iain/LPG/TestProbs/");
-	strcat(filepathname, filename);
+	char filename[255] = "";
+	strcat(filename, "C:/Users/Iain/LPG/TestProbs/");
+	strcat(filename, filename);
 
 	if (!silentMode) printf("LoadFromMPS(filename=%s)\n", filename);
 	if (!silentMode) printf("CoinMpsIO...\n");
@@ -173,51 +132,7 @@ void LoadFromMPS(const char* providedFilename, bool silentMode)
 	status = LPG_UNKNOWN;
 	if (!silentMode) printf("Finished loading!\n");
 }
-//-----------------------------------------------------------------------------
-void LoadFromLP(const char* providedFilename, bool silentMode)
-{
-	FreeIfNeeded();
 
-	char filename[100];
-	if (strlen(providedFilename) > 0) {
-		strcpy(filename, providedFilename);
-	} else {
-		scanf("%s",filename);
-	}
-	if (!silentMode) printf("Loading LP file %s...\n",filename);
-
-
-	char filepathname[100] = "";
-	strcat(filepathname, "C:/Users/Iain/LPG/TestProbs/");
-	strcat(filepathname, filename);
-
-	if (!silentMode) printf("LoadFromLP(filename=%s)\n", filename);
-	if (!silentMode) printf("CoinLpIO...\n");
-	CoinLpIO lpIO;
-	lpIO.readLp(filepathname);
-
-	if (!silentMode) printf("Convert to internal form...\n");
-	ConvertFromGeneralFormToInternal(	*lpIO.getMatrixByCol(),		lpIO.getColLower(), lpIO.getColUpper(),
-										lpIO.getObjCoefficients(),	lpIO.getRowLower(), lpIO.getRowUpper(),
-										m, n, sparseA, A, b, c, xLB, xUB);
-	x = (double*)malloc(sizeof(double)*n);
-	isLoaded = true;
-	z = 0.0;
-	status = LPG_UNKNOWN;
-	if (!silentMode) printf("Finished loading!\n");
-}
-//-----------------------------------------------------------------------------
-void FreeIfNeeded() {
-	if (isLoaded) {
-		free(A);
-		free(b);
-		free(c);
-		free(xLB);
-		free(xUB);
-		free(x);
-		isLoaded = false;
-	}
-}
 //-----------------------------------------------------------------------------
 void RunTestSuite(bool useGPU) {
 
