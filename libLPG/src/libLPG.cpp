@@ -3,9 +3,8 @@
 // Implements RSM for the solution of LPs									 //
 // ------------------------------------------------------------------------- //
 //																			 //
-// libLPG.hpp																 //
-// Main include for LPG. Defines the LPG class, support functions and LPG    //
-// constants.																 //
+// libLPG.cpp																 //
+// Implements all non-solving functionality of the LPG class.				 //
 //																			 //
 // (c) Iain Dunning 2011													 //
 ///////////////////////////////////////////////////////////////////////////////
@@ -36,6 +35,8 @@ void LPG::FreeModelIfNeeded() {
 	if (isLoaded) {
 		free(A);	free(b);	free(c);
 		free(xLB);	free(xUB);	free(x);
+		delete coinSparseA;
+		delete sparseA;
 		isLoaded = false;
 	}
 }
@@ -213,6 +214,10 @@ void LPG::InternalForm(
 			A[coinSparseA->getIndices()[i] + col*m] = coinSparseA->getMutableElements()[i];
 		}
 	}
+
+	// 5.5		A matrix (sparse version)
+	sparseA = new LPGSparseMatrix(A, m, n);
+	//sparseA->PrintMatrix();
 
 	//-------------------------------------------------------------------------
 	// 6. DONE!

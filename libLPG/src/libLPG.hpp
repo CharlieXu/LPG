@@ -47,6 +47,29 @@
 //-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
+// Sparse matrix class
+// Reinventing the wheel? Yes!
+// Educational? You bet
+// Of note: this matrix is read-only, after initial creation
+class LPGSparseMatrix {
+
+public:
+	int m, n; // Matrix size
+	
+	double** values;
+	int** indices;
+	int* nzeros;
+
+	LPGSparseMatrix() { m = -1; n = -1; values = NULL; indices = NULL; }
+
+	LPGSparseMatrix(double* fullMat, int numRows, int numCols);
+
+	void BuildSparse(double* fullMat, int numRows, int numCols);
+
+	void PrintMatrix();
+};
+
+//-----------------------------------------------------------------------------
 // LPG Class
 class LPG {
 public:
@@ -88,6 +111,7 @@ public:
 	int m, n;
 	double *A;
 	CoinPackedMatrix* coinSparseA;
+	LPGSparseMatrix* sparseA;
 	double *b, *c;
 	double *xLB, *xUB;
 

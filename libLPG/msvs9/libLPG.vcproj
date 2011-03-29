@@ -150,6 +150,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\LPGSparseMatrix.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\src\SolveCPU.cpp"
 				>
 			</File>

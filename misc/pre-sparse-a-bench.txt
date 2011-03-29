@@ -1,7 +1,7 @@
 Benchmarks run in Release mode, in Auckland Airport on 29th March
 Column-wise A was implemented, but not sparse-A
 System: Core 2 Duo T9500 @ 2.6 GHz, Win 7 Pro
-Adding up the times for the test suite = 
+Adding up the times for the test suite = 282.654 seconds
 
 RESULTS
            Name      Result    Expected     Time  NumRow
