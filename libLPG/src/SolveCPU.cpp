@@ -72,7 +72,10 @@ void LPG::SolveCPU()
 	// 3.1.2	Artificial variables
 	for (int i = n; i < n+m; i++) {
 		x[i] = b[i-n];
-		for (int i2 = 0; i2 < n; i2++) x[i] -= A[i2 + (i-n)*n]*x[i2];
+		//for (int i2 = 0; i2 < n; i2++) x[i] -= A[i2 + (i-n)*n]*x[i2];
+		// Change A from row-major to col major
+		// i is row, i2 is col
+		for (int i2 = 0; i2 < n; i2++) x[i] -= A[(i-n) + i2*m]*x[i2];
 		assert(x[i] > -LPG_TOL); //###ERR: artificials start positive, drive towards zero
 	}
 
@@ -135,7 +138,10 @@ void LPG::SolveCPU()
 		// P2: rc = c - A^T pi
 		for (int i = 0; i < n; i++) {
 			rc[i] = phaseOne ? 0.0 : c[i];
-			for (int j = 0; j < m; j++) rc[i] -= A[i + j*n] * pi[j];
+			//for (int j = 0; j < m; j++) rc[i] -= A[i + j*n] * pi[j];
+			// Row-major to col-major
+			// i = col, j = row
+			for (int j = 0; j < m; j++) rc[i] -= A[j + i*m] * pi[j];
 		}
 		//###DEBUG: DebugPrint("rc[]",rc,n);
 		//---------------------------------------------------------------------
@@ -189,7 +195,10 @@ void LPG::SolveCPU()
 		// STEP THREE: CALCULATE BINVAS
 		for (int i = 0; i < m; i++) {
 			BinvAs[i] = 0.0;
-			for (int j = 0; j < m; j++) BinvAs[i] += Binv[j + i*m] * A[s + j*n];
+			//for (int j = 0; j < m; j++) BinvAs[i] += Binv[j + i*m] * A[s + j*n];
+			// Row-major to col major change
+			// row = j, col = s
+			for (int j = 0; j < m; j++) BinvAs[i] += Binv[j + i*m] * A[s*m + j];
 		}
 		//###DEBUG: DebugPrint("BinvAs[]", BinvAs, m);
 		//---------------------------------------------------------------------

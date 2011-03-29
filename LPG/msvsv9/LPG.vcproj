@@ -111,7 +111,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="C:\Users\Iain\LPG\libLPG\src;&quot;C:\Users\Iain\LPG\coin-CoinUtils\BuildTools\headers&quot;;&quot;C:\Users\Iain\LPG\coin-CoinUtils\CoinUtils\src&quot;"
+				AdditionalIncludeDirectories="&quot;C:\Program Files (x86)\NVIDIA GPU Computing Toolkit\CUDA\v3.2\include&quot;;C:\Users\Iain\LPG\libLPG\src;&quot;C:\Users\Iain\LPG\coin-CoinUtils\BuildTools\headers&quot;;&quot;C:\Users\Iain\LPG\coin-CoinUtils\CoinUtils\src&quot;"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				WarningLevel="3"
