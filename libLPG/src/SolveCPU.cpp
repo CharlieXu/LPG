@@ -60,6 +60,10 @@ void LPG::SolveCPU()
 	double* rc			= (double*) malloc(n_floats				);
 	double* BinvAs		= (double*) malloc(m_floats				);
 
+	// Geoff's cycling thing
+	//int* cycleCount		= (int*)malloc(sizeof(int)*n);
+	//for (int i = 0; i < n; i++) cycleCount[i] = 0;
+
 	//-------------------------------------------------------------------------
 	// 3.	INITIALISE MEMORY
 	// 3.1	Initial values of variables
@@ -148,7 +152,7 @@ void LPG::SolveCPU()
 		// STEP TWO: CHECK OPTIMALITY, PICK EV
 		double minRC = -LPG_TOL;
 		int s = -1;
-
+		//int bestCycles = INT_MAX;
 		for (int i = 0; i < n; i++) {
 			// If NONBASIC_L (= +1), rc[i] must be negative (< 0) -> +rc[i] < -LPG_TOL
 			// If NONBASIC_U (= -1), rc[i] must be positive (> 0) -> -rc[i] < -LPG_TOL
@@ -156,7 +160,12 @@ void LPG::SolveCPU()
 			// If BASIC	(= 0), can't use this rc -> 0 * rc[i] < -LPG_TOL -> alway FALSE
 			// Then, by setting initial value of minRC to -LPG_TOL, can collapse this
 			// check and the check for a better RC into 1 IF statement!
-			if (varStatus[i] * rc[i] < minRC) { minRC = varStatus[i] * rc[i]; s = i; }
+			if (varStatus[i] * rc[i] < minRC) { 
+				//if (cycleCount[i] < bestCycles) {
+					minRC = varStatus[i] * rc[i]; s = i; 
+				//	bestCycles = cycleCount[i];
+				//}
+			}
 		}
 		//###DEBUG: printf("minRC = %.5f, s = %d\n", minRC, s);
 
@@ -186,6 +195,7 @@ void LPG::SolveCPU()
 				break;
 			}
 		}
+		//cycleCount[s]++;
 		//---------------------------------------------------------------------
 
 		//---------------------------------------------------------------------
@@ -290,6 +300,11 @@ void LPG::SolveCPU()
 				break;
 			}
 		}
+
+		//if (fabs(minRatio) > LPG_TOL) { 
+		//	for (int i = 0; i < n; i++) cycleCount[i] = 0;
+		//}
+
 		//---------------------------------------------------------------------
 
 		//---------------------------------------------------------------------
