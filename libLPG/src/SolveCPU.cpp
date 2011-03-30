@@ -136,13 +136,6 @@ void LPG::SolveCPU()
 
 		// P1: rc = 0 - A^T pi
 		// P2: rc = c - A^T pi
-		//for (int i = 0; i < n; i++) {
-		//	rc[i] = phaseOne ? 0.0 : c[i];
-		//	//for (int j = 0; j < m; j++) rc[i] -= A[i + j*n] * pi[j];
-		//	// Row-major to col-major
-		//	// i = col, j = row
-		//	for (int j = 0; j < m; j++) rc[i] -= A[j + i*m] * pi[j];
-		//}
 		for (int i = 0; i < n; i++) {
 			rc[i] = phaseOne ? 0.0 : c[i];
 			for (int nz = 0; nz < sparseA->nzeros[i]; nz++) 
@@ -188,7 +181,6 @@ void LPG::SolveCPU()
 				status = LPG_OPTIMAL;
 				z = 0.0;
 				for (int i = 0; i < n; i++) {
-					//x_ans[i] = x[i];
 					z += c[i] * x[i];
 				}
 				break;
@@ -200,10 +192,10 @@ void LPG::SolveCPU()
 		// STEP THREE: CALCULATE BINVAS
 		for (int i = 0; i < m; i++) {
 			BinvAs[i] = 0.0;
-			//for (int j = 0; j < m; j++) BinvAs[i] += Binv[j + i*m] * A[s + j*n];
-			// Row-major to col major change
 			// row = j, col = s
-			for (int j = 0; j < m; j++) BinvAs[i] += Binv[j + i*m] * A[s*m + j];
+			//for (int j = 0; j < m; j++) BinvAs[i] += Binv[j + i*m] * A[s*m + j];
+			for (int nz = 0; nz < sparseA->nzeros[s]; nz++) 
+				BinvAs[i] += sparseA->values[s][nz] * Binv[sparseA->indices[s][nz] + i*m];
 		}
 		//###DEBUG: DebugPrint("BinvAs[]", BinvAs, m);
 		//---------------------------------------------------------------------
