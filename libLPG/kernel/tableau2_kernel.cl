@@ -1,10 +1,10 @@
-#pragma OPENCL EXTENSION cl_khr_fp64 : enable
+#include "common.clh"
 
-__kernel void tableau2(	__global double *Binv,
-						__global double *BinvAs,
+__kernel void tableau2(	__global SCALAR *Binv,
+						__global SCALAR *BinvAs,
 						int m, int r) 
 {
-	double erBinvAs = BinvAs[r];
+	SCALAR erBinvAs = BinvAs[r];
 
 	for (int j = 0; j < m; j++) {
 		Binv[j+r*m] = Binv[j+r*m] / erBinvAs;

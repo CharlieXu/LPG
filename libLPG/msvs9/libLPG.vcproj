@@ -180,6 +180,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\kernel\common.clh"
+				>
+			</File>
+			<File
 				RelativePath="..\kernel\dual_kernel.cl"
 				>
 			</File>
