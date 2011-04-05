@@ -1,4 +1,4 @@
-#include "common.clh"
+#include "C:/Users/Iain/LPG/libLPG/kernel/common.clh"
 
 __kernel void tableau2(	__global SCALAR *Binv,
 						__global SCALAR *BinvAs,

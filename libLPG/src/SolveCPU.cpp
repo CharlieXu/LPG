@@ -36,10 +36,10 @@ void LPG::SolveCPU()
 	
 	//-------------------------------------------------------------------------
 	// 1.	GENERAL SETUP
-	size_t m_floats  = m   * sizeof(double);
-	size_t n_floats  = n   * sizeof(double);
-	size_t mm_floats = m*m * sizeof(double);
-	size_t nm_floats = n*m * sizeof(double);
+	size_t m_floats  = m   * sizeof(SCALAR);
+	size_t n_floats  = n   * sizeof(SCALAR);
+	size_t mm_floats = m*m * sizeof(SCALAR);
+	size_t nm_floats = n*m * sizeof(SCALAR);
 	
 	const int BASIC			=  0;
 	const int NONBASIC_L	= +1;
@@ -52,13 +52,12 @@ void LPG::SolveCPU()
 	// 2.1	Basis
 	int*	varStatus	= (int*)	malloc(sizeof(int)*(n+m)	);
 	int*	basicVars	= (int*)	malloc(sizeof(int)*m		);
-	double*	Binv		= (double*)	malloc(mm_floats			);
-	double* cBT			= (double*) malloc(m_floats				);
+	SCALAR*	Binv		= (SCALAR*)	malloc(mm_floats			);
+	SCALAR* cBT			= (SCALAR*) malloc(m_floats				);
 	// 2.2	General
-	//double*	x			= (double*)	malloc(sizeof(double)*(n+m)	);
-	double* pi			= (double*) malloc(m_floats				);
-	double* rc			= (double*) malloc(n_floats				);
-	double* BinvAs		= (double*) malloc(m_floats				);
+	SCALAR* pi			= (SCALAR*) malloc(m_floats				);
+	SCALAR* rc			= (SCALAR*) malloc(n_floats				);
+	SCALAR* BinvAs		= (SCALAR*) malloc(m_floats				);
 
 	// Geoff's cycling thing
 	//int* cycleCount		= (int*)malloc(sizeof(int)*n);
@@ -69,7 +68,7 @@ void LPG::SolveCPU()
 	// 3.1	Initial values of variables
 	// 3.1.1	Real variables
 	for (int i = 0; i < n; i++) {
-		double absLB = fabs(xLB[i]), absUB = fabs(xUB[i]);
+		SCALAR absLB = fabs(xLB[i]), absUB = fabs(xUB[i]);
 		x[i]		 = (absLB < absUB) ? xLB[i]		: xUB[i];
 		varStatus[i] = (absLB < absUB) ? NONBASIC_L : NONBASIC_U;
 	}
@@ -107,11 +106,11 @@ void LPG::SolveCPU()
 		if (iteration % PRINT_ITER_EVERY == 0){
 			printf("Iteration %d\n", iteration);
 			if (phaseOne) {
-				double z_one = 0.0;
+				SCALAR z_one = 0.0;
 				for (int i = n; i < n+m; i++) z_one += x[i];
 				printf("\t[phase one] z = %.5f\n", z_one);
 			} else {
-				double z_two = 0.0;
+				SCALAR z_two = 0.0;
 				for (int i = 0; i < n; i++) z_two += x[i]*c[i];
 				printf("\t[phase two] z = %.5f\n", z_two);
 			}
@@ -150,7 +149,7 @@ void LPG::SolveCPU()
 
 		//---------------------------------------------------------------------
 		// STEP TWO: CHECK OPTIMALITY, PICK EV
-		double minRC = -LPG_TOL;
+		SCALAR minRC = -LPG_TOL;
 		int s = -1;
 		//int bestCycles = INT_MAX;
 		for (int i = 0; i < n; i++) {
@@ -212,7 +211,7 @@ void LPG::SolveCPU()
 
 		//---------------------------------------------------------------------
 		// STEP FOUR: MIN RATIO TEST
-		double minRatio = LPG_BIG, ratio = 0.0;
+		SCALAR minRatio = LPG_BIG, ratio = 0.0;
 		int r = -1;
 		bool rIsEV = false;
 		bool forceOutArtificial = false;
@@ -327,11 +326,11 @@ void LPG::SolveCPU()
 			assert(r<m); //###ERR
 			// RSM tableau: [Binv B | Binv | Binv As]
 			// -> GJ pivot on the BinvAs column, rth row
-			double erBinvAs = BinvAs[r];
+			SCALAR erBinvAs = BinvAs[r];
 			// All non-r rows
 			for (int i = 0; i < m; i++) {
 				if (i != r) {
-					double eiBinvAsOvererBinvAs = BinvAs[i] / erBinvAs;
+					SCALAR eiBinvAsOvererBinvAs = BinvAs[i] / erBinvAs;
 					for (int j = 0; j < m; j++) {
 						Binv[j+i*m] -= eiBinvAsOvererBinvAs * Binv[j+r*m];
 					}

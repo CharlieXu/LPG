@@ -1,4 +1,4 @@
-#include "common.clh"
+#include "C:/Users/Iain/LPG/libLPG/kernel/common.clh"
 
 __kernel void rc2(__global SCALAR *rc, 
 				  __global SCALAR *c, 
@@ -14,7 +14,8 @@ __kernel void rc2(__global SCALAR *rc,
 		// rc = c - piT A
 		SCALAR piTA = 0.0;
 		for (int k = 0; k < m; k++) {
-			piTA += piT[k] * A[i + k*n];
+			//piTA += piT[k] * A[i + k*n];
+			piTA += piT[k] * A[k + i*m];
 		}
 		
 		rc[i] = c[i] - piTA;

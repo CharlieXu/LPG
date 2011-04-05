@@ -22,6 +22,17 @@
 //-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
+// Specify precision to use
+#include <cfloat>
+// Must also be set in common.clh for correct operation of GPU solver
+#define SCALAR float
+#define LPG_TOL 1e-7f
+#define LPG_BIG FLT_MAX
+//#define SCALAR double
+//#define LPG_TOL 1e-7
+//#define LPG_BIG 1e100
+
+//-----------------------------------------------------------------------------
 // OpenCL
 // Additional include directories:
 //C:\Program Files (x86)\NVIDIA GPU Computing Toolkit\CUDA\v3.2\lib\Win32
@@ -41,9 +52,6 @@
 #define LPG_INFEASIBLE 1
 #define LPG_UNBOUNDED 2
 #define LPG_UNKNOWN 3
-// Implement precision, floating point stuff
-#define LPG_TOL 1e-7
-#define LPG_BIG 1e100
 //-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
@@ -56,15 +64,15 @@ class LPGSparseMatrix {
 public:
 	int m, n; // Matrix size
 	
-	double** values;
+	SCALAR** values;
 	int** indices;
 	int* nzeros;
 
 	LPGSparseMatrix() { m = -1; n = -1; values = NULL; indices = NULL; }
 
-	LPGSparseMatrix(double* fullMat, int numRows, int numCols);
+	LPGSparseMatrix(SCALAR* fullMat, int numRows, int numCols);
 
-	void BuildSparse(double* fullMat, int numRows, int numCols);
+	void BuildSparse(SCALAR* fullMat, int numRows, int numCols);
 
 	void PrintMatrix();
 };
@@ -109,14 +117,14 @@ public:
 	void FreeModelIfNeeded();
 
 	int m, n;
-	double *A;
+	SCALAR *A;
 	CoinPackedMatrix* coinSparseA;
 	LPGSparseMatrix* sparseA;
-	double *b, *c;
-	double *xLB, *xUB;
+	SCALAR *b, *c;
+	SCALAR *xLB, *xUB;
 
-	double z;
-	double *x;
+	SCALAR z;
+	SCALAR *x;
 	int status;
 
 	// Convert to internal storage format from the CoinUtils
@@ -152,27 +160,10 @@ private:
 
 //-----------------------------------------------------------------------------
 // Misc functions
-void DebugPrint(char* what, double* data,	int size);
+void DebugPrint(char* what, SCALAR* data,	int size);
 void DebugPrint(char* what, int* data,		int size);
 
 //-----------------------------------------------------------------------------
 // Include guard
 //-----------------------------------------------------------------------------
 #endif
-
-
-		
-
-//-----------------------------------------------------------------------------
-
-//	void SolveLP_C (
-//					int m, int n,							// Problem size
-//					double *A, double *b, double *c_orig,	// } Problem
-//					double *xLB, double *xUB,				// }
-//					double &z, double *x_ans, int &status);	// Output
-//	void SolveLP_G (
-//					int m, int n,							// Problem size
-//					double *A, double *b, double *c_orig,	// } Problem
-//					double *xLB, double *xUB,				// }
-//					double &z, double *x_ans, int &status);	// Output
-//-----------------------------------------------------------------------------

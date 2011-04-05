@@ -1,4 +1,4 @@
-#include "common.clh"
+#include "C:/Users/Iain/LPG/libLPG/kernel/common.clh"
 
 __kernel void minrc(__global SCALAR *rc, 
 					__global int    *varStatus,

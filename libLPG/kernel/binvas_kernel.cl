@@ -1,4 +1,4 @@
-#include "common.clh"
+#include "C:/Users/Iain/LPG/libLPG/kernel/common.clh"
 
 __kernel void binvas(	__global SCALAR *BinvAs, 
 						__global SCALAR *Binv,
@@ -13,7 +13,8 @@ __kernel void binvas(	__global SCALAR *BinvAs,
 		// BinvAs = Binv * As
 		SCALAR value = 0.0;
 		for (int k = 0; k < m; k++) {
-			value += Binv[k + i*m] * A[s+k*n];
+			//value += Binv[k + i*m] * A[s+k*n];
+			value += Binv[k + i*m] * A[k+s*m];
 		}
 		
 		BinvAs[i] = value;

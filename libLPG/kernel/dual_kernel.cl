@@ -1,4 +1,4 @@
-#include "common.clh"
+#include "C:/Users/Iain/LPG/libLPG/kernel/common.clh"
 
 __kernel void dual(	__global SCALAR *cBT, 
 					__global SCALAR *Binv, 

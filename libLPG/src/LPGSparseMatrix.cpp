@@ -13,17 +13,17 @@
 #include <cmath>
 #include <cstdio>
 
-LPGSparseMatrix::LPGSparseMatrix(double* fullMat, int numRows, int numCols) {
+LPGSparseMatrix::LPGSparseMatrix(SCALAR* fullMat, int numRows, int numCols) {
 	BuildSparse(fullMat, numRows, numCols);
 }
 
-void LPGSparseMatrix::BuildSparse(double* fullMat, int numRows, int numCols) {
+void LPGSparseMatrix::BuildSparse(SCALAR* fullMat, int numRows, int numCols) {
 
 	m = numRows;
 	n = numCols;
 
 	indices = (int**)	malloc(sizeof(int*)		* numCols);
-	values  = (double**)malloc(sizeof(double*)	* numCols);
+	values  = (SCALAR**)malloc(sizeof(SCALAR*)	* numCols);
 	nzeros  = (int*)	malloc(sizeof(int)		* numCols);
 	
 	for (int c = 0; c < numCols; c++) {
@@ -34,7 +34,7 @@ void LPGSparseMatrix::BuildSparse(double* fullMat, int numRows, int numCols) {
 		}
 
 		indices[c]	= (int*)	malloc(sizeof(int)		* nonzeroCount);
-		values[c]   = (double*)	malloc(sizeof(double)	* nonzeroCount);
+		values[c]   = (SCALAR*)	malloc(sizeof(SCALAR)	* nonzeroCount);
 		nzeros[c]	= nonzeroCount;
 
 		nonzeroCount = 0;

@@ -113,7 +113,7 @@ void LPG::InternalForm(
 
 	//-------------------------------------------------------------------------
 	// 3. CONVERT CONSTRAINTS
-	std::vector<double> correctedRHS;
+	std::vector<SCALAR> correctedRHS;
 	// 3.1 Pass #1: Add slacks to LEQ, GEQs, turn ranges into two rows
 	for (int row = 0; row < m; row++) {
 		//---------------------------------------------------------------------
@@ -123,7 +123,7 @@ void LPG::InternalForm(
 			// Lower bound and upper bound are equal
 			if (verbose) printf("ROW%03d: Equality constraint. No action required.\n", row);
 			// Record the RHS
-			correctedRHS.push_back(rowlb[row]); // Either UB or LB is OK
+			correctedRHS.push_back((SCALAR)rowlb[row]); // Either UB or LB is OK
 
 		//---------------------------------------------------------------------
 		// LEQ CONSTRAINT
@@ -136,7 +136,7 @@ void LPG::InternalForm(
 			coinSparseA->appendCol(1, &row, &slackCoeff);
 			n++; // Variable added
 			// Record the RHS
-			correctedRHS.push_back(rowub[row]); // UB is correct one
+			correctedRHS.push_back((SCALAR)rowub[row]); // UB is correct one
 
 		//---------------------------------------------------------------------
 		// GEQ CONSTRAINT
@@ -149,7 +149,7 @@ void LPG::InternalForm(
 			coinSparseA->appendCol(1, &row, &slackCoeff);
 			n++; // Variable added
 			// Record the RHS
-			correctedRHS.push_back(rowlb[row]); // LB is correct one
+			correctedRHS.push_back((SCALAR)rowlb[row]); // LB is correct one
 
 		//---------------------------------------------------------------------
 		// RANGE CONSTRAINT (e.g. l <= aTx <= b) - NOT SUPPORTED!!!!
@@ -173,12 +173,12 @@ void LPG::InternalForm(
 
 	//-------------------------------------------------------------------------
 	// 4. ALLOCATE MEMORY
-	A   = (double*)malloc(sizeof(double) * m * n);
-	b   = (double*)malloc(sizeof(double) * m    );
-	c   = (double*)malloc(sizeof(double) *     n); 
-	xUB = (double*)malloc(sizeof(double) *     n);
-	xLB = (double*)malloc(sizeof(double) *     n);
-	x   = (double*)malloc(sizeof(double) *(m + n));
+	A   = (SCALAR*)malloc(sizeof(SCALAR) * m * n);
+	b   = (SCALAR*)malloc(sizeof(SCALAR) * m    );
+	c   = (SCALAR*)malloc(sizeof(SCALAR) *     n); 
+	xUB = (SCALAR*)malloc(sizeof(SCALAR) *     n);
+	xLB = (SCALAR*)malloc(sizeof(SCALAR) *     n);
+	x   = (SCALAR*)malloc(sizeof(SCALAR) *(m + n));
 	
 	//-------------------------------------------------------------------------
 	// 5. COPY DATA INTO NEW MEMORY
@@ -186,7 +186,7 @@ void LPG::InternalForm(
 	for (int row = 0; row < m; row++) b[row] = correctedRHS[row];
 
 	// 5.2		c vector
-	for (int col = 0; col < originalN; col++) c[col] = obj[col];
+	for (int col = 0; col < originalN; col++) c[col] = (SCALAR)obj[col];
 	for (int col = originalN; col < n; col++) c[col] = 0.0;	// Slacks
 
 	// 5.3		xUB, xLB
@@ -199,8 +199,8 @@ void LPG::InternalForm(
 		}
 	}
 	// 5.3.2	Copy over to new structure
-	for (int col = 0; col < originalN; col++) xLB[col] = collb[col];
-	for (int col = 0; col < originalN; col++) xUB[col] = colub[col];
+	for (int col = 0; col < originalN; col++) xLB[col] = (SCALAR)collb[col];
+	for (int col = 0; col < originalN; col++) xUB[col] = (SCALAR)colub[col];
 	for (int col = originalN; col < n; col++) xLB[col] = 0.0; // Slacks
 	for (int col = originalN; col < n; col++) xUB[col] = LPG_BIG; // Slacks
 
@@ -211,7 +211,7 @@ void LPG::InternalForm(
 		int startNext = (col == n-1) ? coinSparseA->getNumElements() 
 									 : coinSparseA->getVectorStarts()[col+1];
 		for (int i = start; i < startNext; i++) {
-			A[coinSparseA->getIndices()[i] + col*m] = coinSparseA->getMutableElements()[i];
+			A[coinSparseA->getIndices()[i] + col*m] = (SCALAR)coinSparseA->getMutableElements()[i];
 		}
 	}
 
@@ -228,7 +228,7 @@ void LPG::InternalForm(
 //-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
-void DebugPrint(char* what, double* data, int size) {
+void DebugPrint(char* what, SCALAR* data, int size) {
 	
 	int curPos = 0;
 	printf("%s:\n",what);
