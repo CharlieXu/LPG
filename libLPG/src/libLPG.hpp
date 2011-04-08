@@ -25,12 +25,12 @@
 // Specify precision to use
 #include <cfloat>
 // Must also be set in common.clh for correct operation of GPU solver
-//#define SCALAR float
-//#define LPG_TOL 1e-7f
-//#define LPG_BIG FLT_MAX
-#define SCALAR double
-#define LPG_TOL 1e-7
-#define LPG_BIG 1e100
+#define SCALAR float
+#define LPG_TOL 1e-7f
+#define LPG_BIG FLT_MAX
+//#define SCALAR double
+//#define LPG_TOL 1e-7
+//#define LPG_BIG 1e100
 
 //-----------------------------------------------------------------------------
 // OpenCL
