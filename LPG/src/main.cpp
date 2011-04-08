@@ -166,9 +166,9 @@ void RunTestSuite(bool useGPU) {
 	
 	// Results table
 	printf("RESULTS\n");
-	printf("%15s  %10s  %10s  %7s  %6s\n", "Name", "Result", "Expected", "Time", "NumRow");
+	printf("%20s  %10s  %10s  %7s  %6s\n", "Name", "Result", "Expected", "Time", "NumRow");
 	for (int i = 0; i < numCases; i++) {
-		printf("%15s  %10.3f  %10.3f  %7.3f  %6d\n", fileNames[i].c_str(), results[i], expected[i], times[i], problemSizeM[i]);
+		printf("%20s  %10.3f  %10.3f  %7.3f  %6d\n", fileNames[i].c_str(), results[i], expected[i], times[i], problemSizeM[i]);
 	}
 
 	// Delete LPG instance
