@@ -1,0 +1,26 @@
+LPG
+===
+Linear Programming on GPUs
+--------------------------
+
+By Iain Dunning ([www.iaindunning.com](http://www.iaindunning.com/))
+
+***
+
+Compiling
+---------
+
+You will need:
+* the source code
+	* Wherever you want
+* coin-CoinUtils (a package including CoinUtils and BuildTools)
+	* Get it from https://projects.coin-or.org/CoinUtils
+	* Place this in the root project directory
+* Either the Nvidia or AMD GPU computing SDKs
+	* Will install to Program Files on Windows
+* [optional] test problems from NETLIB/LP
+	* in \TestProbs
+
+The code itself is platform-agnostic, and should compile file on any system (only been tested on Windows though!)
+
+The only compilation support included are MS Visual Studio project/solution files. You will need to tweak the include directories to match the locations of the SDK for your system.
