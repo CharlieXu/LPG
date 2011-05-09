@@ -3,10 +3,19 @@ LPG
 Linear Programming on GPUs
 --------------------------
 
-By Iain Dunning ([www.iaindunning.com](http://www.iaindunning.com/))
+By Iain Dunning
 
-***
+About
+-----
 
-See www.iaindunning.com for more info.
+See http://www.iaindunning.com for more info.
 
-See COMPILING for information on getting it to run.
+Compiling
+---------
+
+You will need:
+* The source code from GitHub
+* coin-CoinUtils (a package including CoinUtils and BuildTools) from <https://projects.coin-or.org/CoinUtils>
+* Either the Nvidia or AMD GPU computing SDKs
+* [optional] test problems from NETLIB/LP (put in /TestProbs)
+
