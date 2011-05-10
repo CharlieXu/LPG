@@ -1,0 +1,5 @@
+- Get compiling with AMD
+- Run GPU version on CPU
+- Add sparseA support to GPU version
+- Remove single precision support
+- Remove path-hardcoding
