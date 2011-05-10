@@ -1,10 +1,9 @@
 ///////////////////////////////////////////////////////////////////////////////
 // LPG - libLPG																 //
-// Version 1.0																 //
 // Implements RSM for the solution of LPs									 //
 // ------------------------------------------------------------------------- //
 //																			 //
-// SolveLP_C.cpp														     //
+// SolveCPU.cpp															     //
 // Solve LPs on the CPU                              						 //
 //																			 //
 // (c) Iain Dunning 2011													 //
@@ -32,19 +31,15 @@
 //-----------------------------------------------------------------------------
 // SolveLP_C
 // Given a problem in SCF, solve using RSM BOUNDED
-void SolveLP_C (
- int m, int n,							// Problem size
- double *A, double *b, double *c_orig,	// } Problem
- double *xLB, double *xUB,				// }
- double &z, double *x_ans, int &status)	// Output
+void LPG::SolveCPU()
 {
 	
 	//-------------------------------------------------------------------------
 	// 1.	GENERAL SETUP
-	size_t m_floats  = m   * sizeof(double);
-	size_t n_floats  = n   * sizeof(double);
-	size_t mm_floats = m*m * sizeof(double);
-	size_t nm_floats = n*m * sizeof(double);
+	size_t m_floats  = m   * sizeof(SCALAR);
+	size_t n_floats  = n   * sizeof(SCALAR);
+	size_t mm_floats = m*m * sizeof(SCALAR);
+	size_t nm_floats = n*m * sizeof(SCALAR);
 	
 	const int BASIC			=  0;
 	const int NONBASIC_L	= +1;
@@ -57,27 +52,33 @@ void SolveLP_C (
 	// 2.1	Basis
 	int*	varStatus	= (int*)	malloc(sizeof(int)*(n+m)	);
 	int*	basicVars	= (int*)	malloc(sizeof(int)*m		);
-	double*	Binv		= (double*)	malloc(mm_floats			);
-	double* cBT			= (double*) malloc(m_floats				);
+	SCALAR*	Binv		= (SCALAR*)	malloc(mm_floats			);
+	SCALAR* cBT			= (SCALAR*) malloc(m_floats				);
 	// 2.2	General
-	double*	x			= (double*)	malloc(sizeof(double)*(n+m)	);
-	double* pi			= (double*) malloc(m_floats				);
-	double* rc			= (double*) malloc(n_floats				);
-	double* BinvAs		= (double*) malloc(m_floats				);
+	SCALAR* pi			= (SCALAR*) malloc(m_floats				);
+	SCALAR* rc			= (SCALAR*) malloc(n_floats				);
+	SCALAR* BinvAs		= (SCALAR*) malloc(m_floats				);
+
+	// Geoff's cycling thing
+	//int* cycleCount		= (int*)malloc(sizeof(int)*n);
+	//for (int i = 0; i < n; i++) cycleCount[i] = 0;
 
 	//-------------------------------------------------------------------------
 	// 3.	INITIALISE MEMORY
 	// 3.1	Initial values of variables
 	// 3.1.1	Real variables
 	for (int i = 0; i < n; i++) {
-		double absLB = fabs(xLB[i]), absUB = fabs(xUB[i]);
-		x[i]		 = (absLB < absUB) ? absLB		: absUB;
+		SCALAR absLB = fabs(xLB[i]), absUB = fabs(xUB[i]);
+		x[i]		 = (absLB < absUB) ? xLB[i]		: xUB[i];
 		varStatus[i] = (absLB < absUB) ? NONBASIC_L : NONBASIC_U;
 	}
 	// 3.1.2	Artificial variables
 	for (int i = n; i < n+m; i++) {
 		x[i] = b[i-n];
-		for (int i2 = 0; i2 < n; i2++) x[i] -= A[i2 + (i-n)*n]*x[i2];
+		//for (int i2 = 0; i2 < n; i2++) x[i] -= A[i2 + (i-n)*n]*x[i2];
+		// Change A from row-major to col major
+		// i is row, i2 is col
+		for (int i2 = 0; i2 < n; i2++) x[i] -= A[(i-n) + i2*m]*x[i2];
 		assert(x[i] > -LPG_TOL); //###ERR: artificials start positive, drive towards zero
 	}
 
@@ -89,8 +90,8 @@ void SolveLP_C (
 			Binv[i+j*m] = (i==j) ? 1.0 : 0.0;
 		}
 	}
-	for (int i = n; i < n+m; i++) {
-		cBT[i-n] = +1.0;
+	for (int i = 0; i < m; i++) {
+		cBT[i] = +1.0;
 	}
 	
 	//-------------------------------------------------------------------------
@@ -105,12 +106,12 @@ void SolveLP_C (
 		if (iteration % PRINT_ITER_EVERY == 0){
 			printf("Iteration %d\n", iteration);
 			if (phaseOne) {
-				double z_one = 0.0;
+				SCALAR z_one = 0.0;
 				for (int i = n; i < n+m; i++) z_one += x[i];
 				printf("\t[phase one] z = %.5f\n", z_one);
 			} else {
-				double z_two = 0.0;
-				for (int i = 0; i < n; i++) z_two += x[i]*c_orig[i];
+				SCALAR z_two = 0.0;
+				for (int i = 0; i < n; i++) z_two += x[i]*c[i];
 				printf("\t[phase two] z = %.5f\n", z_two);
 			}
 		}
@@ -139,17 +140,18 @@ void SolveLP_C (
 		// P1: rc = 0 - A^T pi
 		// P2: rc = c - A^T pi
 		for (int i = 0; i < n; i++) {
-			rc[i] = phaseOne ? 0.0 : c_orig[i];
-			for (int j = 0; j < m; j++) rc[i] -= A[i + j*n] * pi[j];
+			rc[i] = phaseOne ? 0.0 : c[i];
+			for (int nz = 0; nz < sparseA->nzeros[i]; nz++) 
+				rc[i] -= sparseA->values[i][nz] * pi[sparseA->indices[i][nz]];
 		}
 		//###DEBUG: DebugPrint("rc[]",rc,n);
 		//---------------------------------------------------------------------
 
 		//---------------------------------------------------------------------
 		// STEP TWO: CHECK OPTIMALITY, PICK EV
-		double minRC = -LPG_TOL;
+		SCALAR minRC = -LPG_TOL;
 		int s = -1;
-
+		//int bestCycles = INT_MAX;
 		for (int i = 0; i < n; i++) {
 			// If NONBASIC_L (= +1), rc[i] must be negative (< 0) -> +rc[i] < -LPG_TOL
 			// If NONBASIC_U (= -1), rc[i] must be positive (> 0) -> -rc[i] < -LPG_TOL
@@ -157,7 +159,12 @@ void SolveLP_C (
 			// If BASIC	(= 0), can't use this rc -> 0 * rc[i] < -LPG_TOL -> alway FALSE
 			// Then, by setting initial value of minRC to -LPG_TOL, can collapse this
 			// check and the check for a better RC into 1 IF statement!
-			if (varStatus[i] * rc[i] < minRC) { minRC = varStatus[i] * rc[i]; s = i; }
+			if (varStatus[i] * rc[i] < minRC) { 
+				//if (cycleCount[i] < bestCycles) {
+					minRC = varStatus[i] * rc[i]; s = i; 
+				//	bestCycles = cycleCount[i];
+				//}
+			}
 		}
 		//###DEBUG: printf("minRC = %.5f, s = %d\n", minRC, s);
 
@@ -173,7 +180,7 @@ void SolveLP_C (
 					printf("\tTransitioning to phase 2\n");
 					phaseOne = false;
 					for (int i = 0; i < m; i++) {
-						cBT[i] = (basicVars[i] < n) ? (c_orig[basicVars[i]]) : (0.0);
+						cBT[i] = (basicVars[i] < n) ? (c[basicVars[i]]) : (0.0);
 					}
 					continue;
 				}
@@ -182,26 +189,29 @@ void SolveLP_C (
 				status = LPG_OPTIMAL;
 				z = 0.0;
 				for (int i = 0; i < n; i++) {
-					x_ans[i] = x[i];
-					z += c_orig[i] * x[i];
+					z += c[i] * x[i];
 				}
 				break;
 			}
 		}
+		//cycleCount[s]++;
 		//---------------------------------------------------------------------
 
 		//---------------------------------------------------------------------
 		// STEP THREE: CALCULATE BINVAS
 		for (int i = 0; i < m; i++) {
 			BinvAs[i] = 0.0;
-			for (int j = 0; j < m; j++) BinvAs[i] += Binv[j + i*m] * A[s + j*n];
+			// row = j, col = s
+			//for (int j = 0; j < m; j++) BinvAs[i] += Binv[j + i*m] * A[s*m + j];
+			for (int nz = 0; nz < sparseA->nzeros[s]; nz++) 
+				BinvAs[i] += sparseA->values[s][nz] * Binv[sparseA->indices[s][nz] + i*m];
 		}
 		//###DEBUG: DebugPrint("BinvAs[]", BinvAs, m);
 		//---------------------------------------------------------------------
 
 		//---------------------------------------------------------------------
 		// STEP FOUR: MIN RATIO TEST
-		double minRatio = LPG_BIG, ratio = 0.0;
+		SCALAR minRatio = LPG_BIG, ratio = 0.0;
 		int r = -1;
 		bool rIsEV = false;
 		bool forceOutArtificial = false;
@@ -289,6 +299,11 @@ void SolveLP_C (
 				break;
 			}
 		}
+
+		//if (fabs(minRatio) > LPG_TOL) { 
+		//	for (int i = 0; i < n; i++) cycleCount[i] = 0;
+		//}
+
 		//---------------------------------------------------------------------
 
 		//---------------------------------------------------------------------
@@ -311,11 +326,11 @@ void SolveLP_C (
 			assert(r<m); //###ERR
 			// RSM tableau: [Binv B | Binv | Binv As]
 			// -> GJ pivot on the BinvAs column, rth row
-			double erBinvAs = BinvAs[r];
+			SCALAR erBinvAs = BinvAs[r];
 			// All non-r rows
 			for (int i = 0; i < m; i++) {
 				if (i != r) {
-					double eiBinvAsOvererBinvAs = BinvAs[i] / erBinvAs;
+					SCALAR eiBinvAsOvererBinvAs = BinvAs[i] / erBinvAs;
 					for (int j = 0; j < m; j++) {
 						Binv[j+i*m] -= eiBinvAsOvererBinvAs * Binv[j+r*m];
 					}
@@ -333,7 +348,7 @@ void SolveLP_C (
 				if (fabs(x[basicVars[r]] - 0.00000) < LPG_TOL) varStatus[basicVars[r]] = NONBASIC_L;
 				if (fabs(x[basicVars[r]] - LPG_BIG) < LPG_TOL) varStatus[basicVars[r]] = NONBASIC_U;
 			}
-			cBT[r] = phaseOne ? 0.0 : c_orig[s];
+			cBT[r] = phaseOne ? 0.0 : c[s];
 			basicVars[r] = s;
 
 		} else {
@@ -350,7 +365,7 @@ void SolveLP_C (
 	free(basicVars);
 	free(Binv);
 	free(cBT);
-	free(x);
+	//free(x);
 	free(pi);
 	free(rc);
 	free(BinvAs);

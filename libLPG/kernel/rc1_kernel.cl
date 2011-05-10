@@ -1,8 +1,8 @@
-#pragma OPENCL EXTENSION cl_khr_fp64 : enable
+#include "C:/Users/Iain/LPG/libLPG/kernel/common.clh"
 
-__kernel void rc1(__global double *rc, 
-				  __global double *piT, 
-				  __global double *A, 
+__kernel void rc1(__global SCALAR *rc, 
+				  __global SCALAR *piT, 
+				  __global SCALAR *A, 
 				  int m,
 				  int n) 
 {
@@ -11,9 +11,10 @@ __kernel void rc1(__global double *rc,
     int i = get_global_id(0);
 	if (i < n) {
 		// rc = 0 - piT A
-		double piTA = 0.0;
+		SCALAR piTA = 0.0;
 		for (int k = 0; k < m; k++) {
-			piTA += piT[k] * A[i + k*n];
+			//piTA += piT[k] * A[i + k*n];
+			piTA += piT[k] * A[k + i*m];
 		}
 		
 		rc[i] = 0.0 - piTA;

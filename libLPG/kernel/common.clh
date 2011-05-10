@@ -1,0 +1,6 @@
+// Enable double-precision on Nvidia GPUs
+#pragma OPENCL EXTENSION cl_khr_fp64 : enable
+
+// Define the precision to use
+#define SCALAR float
+//#define SCALAR double

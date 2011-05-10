@@ -146,15 +146,19 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\src\ModelTools.cpp"
+				RelativePath="..\src\libLPG.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\SolveLP_C.cpp"
+				RelativePath="..\src\LPGSparseMatrix.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\SolveLP_G.cpp"
+				RelativePath="..\src\SolveCPU.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\SolveGPU.cpp"
 				>
 			</File>
 		</Filter>
@@ -173,6 +177,10 @@
 			>
 			<File
 				RelativePath="..\kernel\binvas_kernel.cl"
+				>
+			</File>
+			<File
+				RelativePath="..\kernel\common.clh"
 				>
 			</File>
 			<File

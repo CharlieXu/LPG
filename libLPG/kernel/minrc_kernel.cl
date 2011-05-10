@@ -1,16 +1,16 @@
-#pragma OPENCL EXTENSION cl_khr_fp64 : enable
+#include "C:/Users/Iain/LPG/libLPG/kernel/common.clh"
 
-__kernel void minrc(__global double *rc, 
+__kernel void minrc(__global SCALAR *rc, 
 					__global int    *varStatus,
 					__global int	*s,
 					int n) 
 {
-	double minRC = -1e-7;
+	SCALAR minRC = -1e-7;
 	int ev = -1;
 
 	for (int i = 0; i < n; i++) {
-		if ((double)varStatus[i] * rc[i] < minRC) { 
-			minRC = (double)varStatus[i] * rc[i];
+		if ((SCALAR)varStatus[i] * rc[i] < minRC) { 
+			minRC = (SCALAR)varStatus[i] * rc[i];
 			ev = i;
 		}
 	}
