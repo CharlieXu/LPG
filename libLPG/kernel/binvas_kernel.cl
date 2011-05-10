@@ -1,4 +1,4 @@
-#include "C:/Users/Iain/LPG/libLPG/kernel/common.clh"
+#include "C:/Users/Iain/Dev/LPG/libLPG/kernel/common.clh"
 
 __kernel void binvas(	__global SCALAR *BinvAs, 
 						__global SCALAR *Binv,

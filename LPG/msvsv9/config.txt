@@ -1,3 +1,5 @@
-../../TestProbs
-testcases.txt
+../../TestProbs/
+testcasesSingleStable.txt
 #
+testcases.txt
+testcasesSingleStable.txt

@@ -130,12 +130,12 @@ void LPG::InitGPU()
 // Loads all the kernels that will be needed
 void LPG::InitKernels()
 {	
-	LoadKernel("C:/Users/Iain/LPG/libLPG/kernel/dual_kernel.cl",	"dual",		dual_program,		dual_kernel		);
-	LoadKernel("C:/Users/Iain/LPG/libLPG/kernel/rc1_kernel.cl",		"rc1",		rc1_program,		rc1_kernel		);
-	LoadKernel("C:/Users/Iain/LPG/libLPG/kernel/rc2_kernel.cl",		"rc2",		rc1_program,		rc2_kernel		);
-	LoadKernel("C:/Users/Iain/LPG/libLPG/kernel/binvas_kernel.cl",	"binvas",	binvas_program,		binvas_kernel	);
-	LoadKernel("C:/Users/Iain/LPG/libLPG/kernel/tableau1_kernel.cl","tableau1",	tableau1_program,	tableau1_kernel	);
-	LoadKernel("C:/Users/Iain/LPG/libLPG/kernel/tableau2_kernel.cl","tableau2",	tableau2_program,	tableau2_kernel	);
+	LoadKernel("C:/Users/Iain/Dev/LPG/libLPG/kernel/dual_kernel.cl",	"dual",		dual_program,		dual_kernel		);
+	LoadKernel("C:/Users/Iain/Dev/LPG/libLPG/kernel/rc1_kernel.cl",		"rc1",		rc1_program,		rc1_kernel		);
+	LoadKernel("C:/Users/Iain/Dev/LPG/libLPG/kernel/rc2_kernel.cl",		"rc2",		rc1_program,		rc2_kernel		);
+	LoadKernel("C:/Users/Iain/Dev/LPG/libLPG/kernel/binvas_kernel.cl",	"binvas",	binvas_program,		binvas_kernel	);
+	LoadKernel("C:/Users/Iain/Dev/LPG/libLPG/kernel/tableau1_kernel.cl","tableau1",	tableau1_program,	tableau1_kernel	);
+	LoadKernel("C:/Users/Iain/Dev/LPG/libLPG/kernel/tableau2_kernel.cl","tableau2",	tableau2_program,	tableau2_kernel	);
 }
 //-----------------------------------------------------------------------------
 

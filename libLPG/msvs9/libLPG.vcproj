@@ -40,7 +40,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;C:\Users\Iain\LPG\coin-CoinUtils\BuildTools\headers&quot;;&quot;C:\Users\Iain\LPG\coin-CoinUtils\CoinUtils\src&quot;;&quot;C:\Program Files (x86)\NVIDIA GPU Computing Toolkit\CUDA\v3.2\include&quot;"
+				AdditionalIncludeDirectories="&quot;..\..\coin-CoinUtils\CoinUtils\inc&quot;;&quot;..\..\coin-CoinUtils\CoinUtils\src&quot;;&quot;C:\Program Files (x86)\NVIDIA GPU Computing Toolkit\CUDA\v3.2\include&quot;"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -102,7 +102,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="&quot;C:\Users\Iain\LPG\coin-CoinUtils\BuildTools\headers&quot;;&quot;C:\Users\Iain\LPG\coin-CoinUtils\CoinUtils\src&quot;;&quot;C:\Program Files (x86)\NVIDIA GPU Computing Toolkit\CUDA\v3.2\include&quot;"
+				AdditionalIncludeDirectories="&quot;..\..\coin-CoinUtils\CoinUtils\inc&quot;;&quot;..\..\coin-CoinUtils\CoinUtils\src&quot;;&quot;C:\Program Files (x86)\NVIDIA GPU Computing Toolkit\CUDA\v3.2\include&quot;"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				WarningLevel="3"
