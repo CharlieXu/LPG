@@ -40,7 +40,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;..\..\coin-CoinUtils\CoinUtils\inc&quot;;&quot;..\..\coin-CoinUtils\CoinUtils\src&quot;;..\..\libLPG\src;&quot;C:\Program Files (x86)\NVIDIA GPU Computing Toolkit\CUDA\v3.2\include&quot;"
+				AdditionalIncludeDirectories="&quot;..\..\coin-CoinUtils\CoinUtils\inc&quot;;&quot;..\..\coin-CoinUtils\CoinUtils\src&quot;;..\..\libLPG\src;&quot;X:\Program Files (x86)\NVIDIA GPU Computing Toolkit\CUDA\v3.2\include&quot;;&quot;C:\Program Files (x86)\AMD APP\include&quot;"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -58,7 +58,8 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalLibraryDirectories="&quot;C:\Program Files (x86)\NVIDIA GPU Computing Toolkit\CUDA\v3.2\lib\Win32&quot;"
+				AdditionalDependencies="OpenCL.lib"
+				AdditionalLibraryDirectories="&quot;X:\Program Files (x86)\NVIDIA GPU Computing Toolkit\CUDA\v3.2\lib\Win32&quot;;&quot;C:\Program Files (x86)\AMD APP\lib\x86&quot;"
 				GenerateDebugInformation="true"
 				TargetMachine="1"
 			/>
@@ -111,7 +112,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="&quot;..\..\coin-CoinUtils\CoinUtils\inc&quot;;&quot;..\..\coin-CoinUtils\CoinUtils\src&quot;;..\..\libLPG\src;&quot;C:\Program Files (x86)\NVIDIA GPU Computing Toolkit\CUDA\v3.2\include&quot;"
+				AdditionalIncludeDirectories="&quot;..\..\coin-CoinUtils\CoinUtils\inc&quot;;&quot;..\..\coin-CoinUtils\CoinUtils\src&quot;;..\..\libLPG\src;&quot;C:\Program Files (x86)\NVIDIA GPU Computing Toolkit\CUDA\v3.2\include&quot;;&quot;X:\Program Files (x86)\AMD APP\include&quot;"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				WarningLevel="3"
@@ -128,7 +129,8 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalLibraryDirectories="&quot;C:\Program Files (x86)\NVIDIA GPU Computing Toolkit\CUDA\v3.2\lib\Win32&quot;"
+				AdditionalDependencies="OpenCL.lib"
+				AdditionalLibraryDirectories="&quot;C:\Program Files (x86)\NVIDIA GPU Computing Toolkit\CUDA\v3.2\lib\Win32&quot;;&quot;X:\Program Files (x86)\AMD APP\lib\x86&quot;"
 				GenerateDebugInformation="true"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"

@@ -179,6 +179,11 @@ void RunTestSuite(bool useGPU) {
 //-----------------------------------------------------------------------------
 void Solve(char type) 
 {
+	if (model == NULL) {
+		printf("Load model first!\n");
+		return;
+	}
+
 	// GPU-only: prepare GPU (may be done already)
 	if (type == 'G') model->InitGPU();
 	if (type == 'G') model->InitKernels();

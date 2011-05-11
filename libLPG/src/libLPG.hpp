@@ -25,24 +25,33 @@
 // Specify precision to use
 #include <cfloat>
 // Must also be set in common.clh for correct operation of GPU solver
-#define SCALAR float
-#define LPG_TOL 1e-7f
-#define LPG_BIG FLT_MAX
-//#define SCALAR double
-//#define LPG_TOL 1e-7
-//#define LPG_BIG 1e100
+//#define SCALAR float
+//#define LPG_TOL 1e-7f
+//#define LPG_BIG FLT_MAX
+#define SCALAR double
+#define LPG_TOL 1e-7
+#define LPG_BIG 1e100
 
 //-----------------------------------------------------------------------------
 // OpenCL
-// Additional include directories:
-//C:\Program Files (x86)\NVIDIA GPU Computing Toolkit\CUDA\v3.2\lib\Win32
-//C:\Program Files (x86)\ATI Stream\lib\x86
-// Additional library directories:
-//C:\Program Files (x86)\NVIDIA GPU Computing Toolkit\CUDA\v3.2\include;
-//C:\Program Files (x86)\ATI Stream\include
-#pragma comment(lib, "OpenCL.lib")
 #include <CL/cl.h>
 #define MAX_SOURCE_SIZE (0x100000)
+
+// Preferred OpenCL platform - will use this platform if present
+#define PREFPLATFORM "Advanced Micro Devices, Inc."
+//#define PREFPLATFORM "NVIDIA Corporation"
+
+// Preferred OpenCL device type
+#define PREFDEVICE CL_DEVICE_TYPE_CPU
+//#define PREFDEVICE CL_DEVICE_TYPE_GPU
+//#define PREFDEVICE CL_DEVICE_TYPE_DEFAULT
+
+// OpenCL error checker - useful for debugging
+// USE: Just write CL_ERR_CHECK (no semicolon) after a OpenCL call
+//		You can find the various error codes in CL/cl.h
+#define CL_ERR_CHECK if (ret != 0) { printf("Err code=%d\n", ret); assert(ret==0); }
+//-----------------------------------------------------------------------------
+
 //-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
@@ -138,6 +147,7 @@ public:
 
 private:
 
+	// OpenCL helper functions
 	void LoadKernel(char* fileName, char* kernelName, cl_program& program, cl_kernel& kernel);
 
 	// OpenCL globals
