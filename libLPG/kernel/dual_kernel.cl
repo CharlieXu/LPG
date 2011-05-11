@@ -1,8 +1,8 @@
 #include "C:/Users/Iain/Dev/LPG/libLPG/kernel/common.clh"
 
-__kernel void dual(	__global SCALAR *cBT, 
-					__global SCALAR *Binv, 
-					__global SCALAR *piT, 
+__kernel void dual(	__global double *cBT, 
+					__global double *Binv, 
+					__global double *piT, 
 					int m) 
 {
  
@@ -11,7 +11,7 @@ __kernel void dual(	__global SCALAR *cBT,
 	if (i < m) {
 	 
 		// piT = cbT Binv
-		SCALAR value = 0.0;
+		double value = 0.0;
 		for (int k = 0; k < m; k++) {
 			value = value + cBT[k] * Binv[i+k*m];
 		}

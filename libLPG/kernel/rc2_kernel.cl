@@ -1,9 +1,9 @@
 #include "C:/Users/Iain/Dev/LPG/libLPG/kernel/common.clh"
 
-__kernel void rc2(__global SCALAR *rc, 
-				  __global SCALAR *c, 
-				  __global SCALAR *piT, 
-				  __global SCALAR *A, 
+__kernel void rc2(__global double *rc, 
+				  __global double *c, 
+				  __global double *piT, 
+				  __global double *A, 
 				  int m,
 				  int n) 
 {
@@ -12,7 +12,7 @@ __kernel void rc2(__global SCALAR *rc,
     int i = get_global_id(0);
 	if (i < n) {
 		// rc = c - piT A
-		SCALAR piTA = 0.0;
+		double piTA = 0.0;
 		for (int k = 0; k < m; k++) {
 			//piTA += piT[k] * A[i + k*n];
 			piTA += piT[k] * A[k + i*m];

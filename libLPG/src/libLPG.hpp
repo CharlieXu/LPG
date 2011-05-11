@@ -22,15 +22,11 @@
 //-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
-// Specify precision to use
+// Precision-related constants
 #include <cfloat>
-// Must also be set in common.clh for correct operation of GPU solver
-//#define SCALAR float
-//#define LPG_TOL 1e-7f
-//#define LPG_BIG FLT_MAX
-#define SCALAR double
 #define LPG_TOL 1e-7
 #define LPG_BIG 1e100
+//-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
 // OpenCL
@@ -73,15 +69,15 @@ class LPGSparseMatrix {
 public:
 	int m, n; // Matrix size
 	
-	SCALAR** values;
+	double** values;
 	int** indices;
 	int* nzeros;
 
 	LPGSparseMatrix() { m = -1; n = -1; values = NULL; indices = NULL; }
 
-	LPGSparseMatrix(SCALAR* fullMat, int numRows, int numCols);
+	LPGSparseMatrix(double* fullMat, int numRows, int numCols);
 
-	void BuildSparse(SCALAR* fullMat, int numRows, int numCols);
+	void BuildSparse(double* fullMat, int numRows, int numCols);
 
 	void PrintMatrix();
 };
@@ -105,7 +101,7 @@ public:
 	// Solvers
 	void SolveCPU();
 	void SolveGPU();
-	
+
 	// Optional GPU setup functions
 	void InitKernels();
 	void InitGPU();
@@ -126,14 +122,14 @@ public:
 	void FreeModelIfNeeded();
 
 	int m, n;
-	SCALAR *A;
+	double *A;
 	CoinPackedMatrix* coinSparseA;
 	LPGSparseMatrix* sparseA;
-	SCALAR *b, *c;
-	SCALAR *xLB, *xUB;
+	double *b, *c;
+	double *xLB, *xUB;
 
-	SCALAR z;
-	SCALAR *x;
+	double z;
+	double *x;
 	int status;
 
 	// Convert to internal storage format from the CoinUtils
@@ -170,7 +166,7 @@ private:
 
 //-----------------------------------------------------------------------------
 // Misc functions
-void DebugPrint(char* what, SCALAR* data,	int size);
+void DebugPrint(char* what, double* data,	int size);
 void DebugPrint(char* what, int* data,		int size);
 
 //-----------------------------------------------------------------------------

@@ -29,10 +29,10 @@ void LPG::SolveGPU()
 	//-------------------------------------------------------------------------
 	// 1.	GENERAL SETUP
 	// 1.1	Constants
-	size_t m_floats  = m   * sizeof(SCALAR);
-	size_t n_floats  = n   * sizeof(SCALAR);
-	size_t mm_floats = m*m * sizeof(SCALAR);
-	size_t nm_floats = n*m * sizeof(SCALAR);
+	size_t m_floats  = m   * sizeof(double);
+	size_t n_floats  = n   * sizeof(double);
+	size_t mm_floats = m*m * sizeof(double);
+	size_t nm_floats = n*m * sizeof(double);
 
 	const int BASIC			=  0;
 	const int NONBASIC_L	= +1;
@@ -56,12 +56,12 @@ void LPG::SolveGPU()
 	// 2.1		In main system RAM
 	int*	varStatus	= (int*)	malloc(sizeof(int)*(n+m)		);
 	int*	basicVars	= (int*)	malloc(sizeof(int)*m			);
-	SCALAR*	Binv		= (SCALAR*)	malloc(mm_floats				);
-	SCALAR* cBT			= (SCALAR*) malloc(m_floats					);
-	SCALAR*	x			= (SCALAR*)	malloc(sizeof(SCALAR)*(n+m)		);
-	SCALAR* pi			= (SCALAR*) malloc(m_floats					);
-	SCALAR* rc			= (SCALAR*) malloc(n_floats					);
-	SCALAR* BinvAs		= (SCALAR*) malloc(m_floats					);
+	double*	Binv		= (double*)	malloc(mm_floats				);
+	double* cBT			= (double*) malloc(m_floats					);
+	double*	x			= (double*)	malloc(sizeof(double)*(n+m)		);
+	double* pi			= (double*) malloc(m_floats					);
+	double* rc			= (double*) malloc(n_floats					);
+	double* BinvAs		= (double*) malloc(m_floats					);
 
 	// 2.2		On the GPU
 	cl_mem cBT_gpu		= clCreateBuffer(context, CL_MEM_READ_WRITE,  m_floats, NULL, &ret); CL_ERR_CHECK
@@ -79,7 +79,7 @@ void LPG::SolveGPU()
 	// 3.1		Initial values of variables
 	// 3.1.1	Real variables
 	for (int i = 0; i < n; i++) {
-		SCALAR absLB = fabs(xLB[i]), absUB = fabs(xUB[i]);
+		double absLB = fabs(xLB[i]), absUB = fabs(xUB[i]);
 		x[i]		 = (absLB < absUB) ? xLB[i]		: xUB[i];
 		varStatus[i] = (absLB < absUB) ? NONBASIC_L : NONBASIC_U;
 	}
@@ -102,14 +102,14 @@ void LPG::SolveGPU()
 
 	// 3.3	Kernels
 	// 3.3.1	dual_kernel - computes piT = cBT * Binv
-	//			SCALAR *cBT, SCALAR *Binv, SCALAR *piT, int m
+	//			double *cBT, double *Binv, double *piT, int m
 	ret = clSetKernelArg(dual_kernel,	0, sizeof(cl_mem),	(void *)&cBT_gpu);	CL_ERR_CHECK
 	ret = clSetKernelArg(dual_kernel,	1, sizeof(cl_mem),	(void *)&Binv_gpu); CL_ERR_CHECK
 	ret = clSetKernelArg(dual_kernel,	2, sizeof(cl_mem),	(void *)&pi_gpu);	CL_ERR_CHECK
 	ret = clSetKernelArg(dual_kernel,	3, sizeof(int),		(void *)&m);		CL_ERR_CHECK
 
 	// 3.3.2	rc1_kernel - computes rcT = 0 - piT*A
-	//			SCALAR *rc, SCALAR *piT, SCALAR *A, int m, int n
+	//			double *rc, double *piT, double *A, int m, int n
 	ret = clSetKernelArg(rc1_kernel,	0, sizeof(cl_mem),	(void *)&rc_gpu);	CL_ERR_CHECK
 	ret = clSetKernelArg(rc1_kernel,	1, sizeof(cl_mem),	(void *)&pi_gpu);	CL_ERR_CHECK
 	ret = clSetKernelArg(rc1_kernel,	2, sizeof(cl_mem),	(void *)&A_gpu);	CL_ERR_CHECK
@@ -117,7 +117,7 @@ void LPG::SolveGPU()
 	ret = clSetKernelArg(rc1_kernel,	4, sizeof(int),		(void *)&n);		CL_ERR_CHECK
 
 	// 3.3.3	rc2_kernel - computes rcT = cT - piT*A
-	//			SCALAR *rc, SCALAR *c, SCALAR *piT, SCALAR *A, int m, int n
+	//			double *rc, double *c, double *piT, double *A, int m, int n
 	ret = clSetKernelArg(rc2_kernel,	0, sizeof(cl_mem),	(void *)&rc_gpu);	CL_ERR_CHECK
 	ret = clSetKernelArg(rc2_kernel,	1, sizeof(cl_mem),	(void *)&c_gpu);	CL_ERR_CHECK
 	ret = clSetKernelArg(rc2_kernel,	2, sizeof(cl_mem),	(void *)&pi_gpu);	CL_ERR_CHECK
@@ -126,7 +126,7 @@ void LPG::SolveGPU()
 	ret = clSetKernelArg(rc2_kernel,	5, sizeof(int),		(void *)&n);		CL_ERR_CHECK
 
 	// 3.3.5  binvas_kernel - computes BinvAs = Binv * As
-	//	      SCALAR *BinvAs, SCALAR *Binv, SCALAR *A, int m, int n, int s
+	//	      double *BinvAs, double *Binv, double *A, int m, int n, int s
 	ret = clSetKernelArg(binvas_kernel, 0, sizeof(cl_mem), (void *)&BinvAs_gpu); CL_ERR_CHECK
 	ret = clSetKernelArg(binvas_kernel, 1, sizeof(cl_mem), (void *)&Binv_gpu);	CL_ERR_CHECK
 	ret = clSetKernelArg(binvas_kernel, 2, sizeof(cl_mem), (void *)&A_gpu);		CL_ERR_CHECK
@@ -135,14 +135,14 @@ void LPG::SolveGPU()
 	// s done later
 
 	// 3.3.6  tableau1_kernel - update the basis, all rows except r
-	//	      SCALAR *Binv, SCALAR *BinvAs, int m, int r
+	//	      double *Binv, double *BinvAs, int m, int r
 	ret = clSetKernelArg(tableau1_kernel, 0, sizeof(cl_mem), (void *)&Binv_gpu); CL_ERR_CHECK
 	ret = clSetKernelArg(tableau1_kernel, 1, sizeof(cl_mem), (void *)&BinvAs_gpu); CL_ERR_CHECK
 	ret = clSetKernelArg(tableau1_kernel, 2, sizeof(cl_mem), (void *)&m); CL_ERR_CHECK
 	// r done later
 	
 	// 3.3.7  tableau2_kernel - update the basis, only r
-	//	      SCALAR *Binv, SCALAR *BinvAs, int m, int r
+	//	      double *Binv, double *BinvAs, int m, int r
 	ret = clSetKernelArg(tableau2_kernel, 0, sizeof(cl_mem), (void *)&Binv_gpu); CL_ERR_CHECK
 	ret = clSetKernelArg(tableau2_kernel, 1, sizeof(cl_mem), (void *)&BinvAs_gpu); CL_ERR_CHECK
 	ret = clSetKernelArg(tableau2_kernel, 2, sizeof(cl_mem), (void *)&m); CL_ERR_CHECK
@@ -166,11 +166,11 @@ void LPG::SolveGPU()
 		if (iteration % PRINT_ITER_EVERY == 0){
 			printf("Iteration %d\n", iteration);
 			if (phaseOne) {
-				SCALAR z_one = 0.0;
+				double z_one = 0.0;
 				for (int i = n; i < n+m; i++) z_one += x[i];
 				printf("\t[phase one] z = %.5f\n", z_one);
 			} else {
-				SCALAR z_two = 0.0;
+				double z_two = 0.0;
 				for (int i = 0; i < n; i++) z_two += x[i]*c[i];
 				printf("\t[phase two] z = %.5f\n", z_two);
 			}
@@ -199,7 +199,7 @@ void LPG::SolveGPU()
 
 		//---------------------------------------------------------------------
 		// STEP TWO: CHECK OPTIMALITY, PICK EV
-		SCALAR minRC = -LPG_TOL;
+		double minRC = -LPG_TOL;
 		int s = -1;
 
 		for (int i = 0; i < n; i++) {
@@ -257,7 +257,7 @@ void LPG::SolveGPU()
 
 		//---------------------------------------------------------------------
 		// STEP FOUR: MIN RATIO TEST
-		SCALAR minRatio = LPG_BIG, ratio = 0.0;
+		double minRatio = LPG_BIG, ratio = 0.0;
 		int r = -1;
 		bool rIsEV = false;
 		bool forceOutArtificial = false;
@@ -351,14 +351,6 @@ void LPG::SolveGPU()
 		x[s] += varStatus[s] * minRatio;
 		for (int i = 0; i < m; i++) x[basicVars[i]] -= varStatus[s] * minRatio * BinvAs[i];
 
-		/*if (varStatus[s] == NONBASIC_L) {
-			x[s] += minRatio;
-			for (int i = 0; i < m; i++) x[basicVars[i]] -= minRatio * BinvAs[i];
-		}
-		if (varStatus[s] == NONBASIC_U) {
-			x[s] -= minRatio;
-			for (int i = 0; i < m; i++) x[basicVars[i]] += minRatio * BinvAs[i];
-		}*/
 		//###DEBUG: DebugPrint("x[] updated",x,n+m);
 		if (!rIsEV) {
 			// Basis change! Update Binv, flags

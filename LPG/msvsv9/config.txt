@@ -1,5 +1,5 @@
 ../../TestProbs/
-testcasesSingleStable.txt
+testcasesQuick.txt
 #
 testcases.txt
 testcasesSingleStable.txt

@@ -1,5 +1,8 @@
 - Get compiling with AMD - DONE 11MAY2011
 - Run GPU version on CPU - DONE 11MAY2011
-- Remove single precision support
+- Remove single precision support - DONE 11MAY2011
 - Add sparseA support to GPU version
 - Remove path-hardcoding
+- Support range constraints
+- Support free variables
+- Add degeneracy support
