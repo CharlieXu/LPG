@@ -9,7 +9,8 @@ About
 -----
 
 NOTE 29 Nov 2011: Been getting a fair amount of traffic to this from or-exchange and elsewhere - I'm not sure what state the code is in, and have been working on very different things. I hope to re-visit the code and get what exists working nicely and well documented - this may just be a case of rolling back to an earlier revision.
-See http://www.iaindunning.com for more info.
+
+See http://www.iaindunning.com for more info about the project in general.
 
 Compiling
 ---------
